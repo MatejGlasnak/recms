@@ -21,10 +21,10 @@ export function useRefineResources(): ResourceProps[] {
 				methods: resource.methods,
 				dbResourceId: resource.id
 			},
-			list: `/admin/${resource.name}`,
-			create: `/admin/${resource.name}/create`,
-			edit: `/admin/${resource.name}/edit/:id`,
-			show: `/admin/${resource.name}/show/:id`
+			list: `/admin/resources/${resource.name}`,
+			create: `/admin/resources/${resource.name}/create`,
+			edit: `/admin/resources/${resource.name}/edit/:id`,
+			show: `/admin/resources/${resource.name}/show/:id`
 		}))
 	}, [dbResources])
 

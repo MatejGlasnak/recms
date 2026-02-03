@@ -38,8 +38,8 @@ import {
 	ChevronUp,
 	ChevronDown
 } from 'lucide-react'
-import { useUpdateListConfig } from '@/lib/hooks/use-list-config'
-import type { ListConfig } from '@/lib/types/list-config'
+import { useUpdateListConfig } from '../../../hooks'
+import type { ListConfig } from '../../../types'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -81,27 +81,25 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-interface AListFiltersEditorProps {
+export interface ListFiltersEditorProps {
 	resourceId: string
 	currentConfig: ListConfig | undefined
 	open: boolean
 	onOpenChange: (open: boolean) => void
 }
 
-export function AListFiltersEditor({
+export function ListFiltersEditor({
 	resourceId,
 	currentConfig,
 	open,
 	onOpenChange
-}: AListFiltersEditorProps) {
+}: ListFiltersEditorProps) {
 	const updateMutation = useUpdateListConfig(resourceId)
 	const [expandedFilters, setExpandedFilters] = useState<Set<string>>(new Set())
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			filters: []
-		}
+		defaultValues: { filters: [] }
 	})
 
 	const { fields, append, remove, move } = useFieldArray({
@@ -112,29 +110,21 @@ export function AListFiltersEditor({
 	const toggleFilter = (filterId: string) => {
 		setExpandedFilters(prev => {
 			const next = new Set(prev)
-			if (next.has(filterId)) {
-				next.delete(filterId)
-			} else {
-				next.add(filterId)
-			}
+			if (next.has(filterId)) next.delete(filterId)
+			else next.add(filterId)
 			return next
 		})
 	}
 
-	// Update form values when config changes or dialog opens
 	useEffect(() => {
 		if (open && currentConfig) {
-			form.reset({
-				filters: currentConfig.filters || []
-			})
+			form.reset({ filters: currentConfig.filters || [] })
 		}
 	}, [open, currentConfig, form])
 
 	const onSubmit = async (values: FormValues) => {
 		try {
-			await updateMutation.mutateAsync({
-				filters: values.filters
-			})
+			await updateMutation.mutateAsync({ filters: values.filters })
 			onOpenChange(false)
 		} catch (error) {
 			console.error('Error updating filters:', error)
@@ -153,7 +143,6 @@ export function AListFiltersEditor({
 			options: [],
 			multiple: false
 		})
-		// Auto-expand the new filter
 		setExpandedFilters(prev => new Set(prev).add(newId))
 	}
 
@@ -177,7 +166,7 @@ export function AListFiltersEditor({
 						) : (
 							<div className='space-y-4'>
 								{fields.map((field, index) => (
-									<FilterEditor
+									<FilterEditorRow
 										key={field.id}
 										form={form}
 										index={index}
@@ -226,8 +215,8 @@ export function AListFiltersEditor({
 	)
 }
 
-interface FilterEditorProps {
-	form: any
+interface FilterEditorRowProps {
+	form: ReturnType<typeof useForm<FormValues>>
 	index: number
 	onRemove: () => void
 	onMove: (fromIndex: number, toIndex: number) => void
@@ -236,7 +225,7 @@ interface FilterEditorProps {
 	onToggleExpanded: () => void
 }
 
-function FilterEditor({
+function FilterEditorRow({
 	form,
 	index,
 	onRemove,
@@ -244,7 +233,7 @@ function FilterEditor({
 	totalFilters,
 	isExpanded,
 	onToggleExpanded
-}: FilterEditorProps) {
+}: FilterEditorRowProps) {
 	const filterType = form.watch(`filters.${index}.type`)
 	const filterLabel = form.watch(`filters.${index}.label`)
 	const {
@@ -289,7 +278,12 @@ function FilterEditor({
 					<div className='w-36'>
 						<Select
 							value={filterType}
-							onValueChange={value => form.setValue(`filters.${index}.type`, value)}
+							onValueChange={value =>
+								form.setValue(
+									`filters.${index}.type`,
+									value as 'input' | 'select' | 'combobox' | 'checkbox'
+								)
+							}
 						>
 							<SelectTrigger>
 								<SelectValue />
@@ -340,7 +334,6 @@ function FilterEditor({
 			{isExpanded && (
 				<CardContent>
 					<div className='grid grid-cols-2 gap-4'>
-						{/* Field Name */}
 						<FormField
 							control={form.control}
 							name={`filters.${index}.field`}
@@ -358,7 +351,6 @@ function FilterEditor({
 							)}
 						/>
 
-						{/* Operator */}
 						<FormField
 							control={form.control}
 							name={`filters.${index}.operator`}
@@ -394,7 +386,6 @@ function FilterEditor({
 							)}
 						/>
 
-						{/* Placeholder (for input, select, and combobox) */}
 						{(filterType === 'input' ||
 							filterType === 'select' ||
 							filterType === 'combobox') && (
@@ -416,7 +407,6 @@ function FilterEditor({
 							/>
 						)}
 
-						{/* Multiple selection option for combobox */}
 						{filterType === 'combobox' && (
 							<FormField
 								control={form.control}
@@ -437,7 +427,6 @@ function FilterEditor({
 							/>
 						)}
 
-						{/* Options (for select and combobox) - full width */}
 						{(filterType === 'select' || filterType === 'combobox') && (
 							<div className='col-span-2 space-y-3'>
 								<FormLabel>Options</FormLabel>

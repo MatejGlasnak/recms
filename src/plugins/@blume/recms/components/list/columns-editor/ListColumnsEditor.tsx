@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo, type ReactNode } from 'react'
-import { ColumnConfig, ListConfig } from '@/lib/types/list-config'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -12,25 +11,29 @@ import {
 	DialogTitle
 } from '@/components/ui/dialog'
 import { Loader2 } from 'lucide-react'
-import { AListColumnsEditor } from './a-list-columns-editor'
-import { useUpdateListConfig } from '@/lib/hooks/use-list-config'
+import { useUpdateListConfig } from '../../../hooks'
+import type { ColumnConfig, ListConfig } from '../../../types'
+import { EditableWrapper } from '../../ui/EditableWrapper'
+import { ListColumnsEditorForm } from './ListColumnsEditorForm'
 
-interface AListColumnsProps {
+export interface ListColumnsEditorProps {
 	resourceId: string
 	currentConfig: ListConfig | undefined
 	editMode: boolean
 	children: ReactNode
 }
 
-export function AListColumns({ resourceId, currentConfig, editMode, children }: AListColumnsProps) {
+export function ListColumnsEditor({
+	resourceId,
+	currentConfig,
+	editMode,
+	children
+}: ListColumnsEditorProps) {
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const updateMutation = useUpdateListConfig(resourceId)
-
-	// Initialize columns from current config
 	const initialColumns = useMemo(() => currentConfig?.columns || [], [currentConfig?.columns])
 	const [columns, setColumns] = useState<ColumnConfig[]>(initialColumns)
 
-	// Reset columns when dialog opens
 	const handleDialogChange = (open: boolean) => {
 		if (open) {
 			setColumns(initialColumns)
@@ -40,9 +43,7 @@ export function AListColumns({ resourceId, currentConfig, editMode, children }: 
 
 	const handleSave = async () => {
 		try {
-			await updateMutation.mutateAsync({
-				columns
-			})
+			await updateMutation.mutateAsync({ columns })
 			setDialogOpen(false)
 		} catch (error) {
 			console.error('Error saving columns:', error)
@@ -51,16 +52,13 @@ export function AListColumns({ resourceId, currentConfig, editMode, children }: 
 
 	return (
 		<>
-			{editMode ? (
-				<div
-					className='cursor-pointer transition-all border-2 border-dashed border-muted-foreground/30 rounded-md p-4 hover:border-muted-foreground/60 hover:bg-muted/30'
-					onClick={() => setDialogOpen(true)}
-				>
-					{children}
-				</div>
-			) : (
-				<>{children}</>
-			)}
+			<EditableWrapper
+				editMode={editMode}
+				onEditClick={() => setDialogOpen(true)}
+				className='p-4'
+			>
+				{children}
+			</EditableWrapper>
 
 			<Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
 				<DialogContent className='sm:max-w-[800px] max-h-[90vh] overflow-y-auto'>
@@ -72,7 +70,7 @@ export function AListColumns({ resourceId, currentConfig, editMode, children }: 
 						</DialogDescription>
 					</DialogHeader>
 					<div className='py-4'>
-						<AListColumnsEditor columns={columns} onChange={setColumns} />
+						<ListColumnsEditorForm columns={columns} onChange={setColumns} />
 					</div>
 					<DialogFooter>
 						<Button

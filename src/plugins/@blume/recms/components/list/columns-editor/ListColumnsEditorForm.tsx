@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { ColumnConfig } from '@/lib/types/list-config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,13 +23,14 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Trash2, GripVertical } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import type { ColumnConfig } from '../../../types'
 
-interface AListColumnsEditorProps {
+export interface ListColumnsEditorFormProps {
 	columns: ColumnConfig[]
 	onChange: (columns: ColumnConfig[]) => void
 }
 
-export function AListColumnsEditor({ columns, onChange }: AListColumnsEditorProps) {
+export function ListColumnsEditorForm({ columns, onChange }: ListColumnsEditorFormProps) {
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const [editingColumn, setEditingColumn] = useState<ColumnConfig | null>(null)
 
@@ -60,24 +60,18 @@ export function AListColumnsEditor({ columns, onChange }: AListColumnsEditorProp
 
 	const handleSave = useCallback(() => {
 		if (!editingColumn) return
-
-		// Validate required fields
 		if (!editingColumn.field || !editingColumn.label) {
 			alert('Field and label are required')
 			return
 		}
-
 		const existingIndex = columns.findIndex(c => c.id === editingColumn.id)
 		if (existingIndex >= 0) {
-			// Update existing
 			const updated = [...columns]
 			updated[existingIndex] = editingColumn
 			onChange(updated)
 		} else {
-			// Add new
 			onChange([...columns, editingColumn])
 		}
-
 		setDialogOpen(false)
 		setEditingColumn(null)
 	}, [editingColumn, columns, onChange])
@@ -285,10 +279,10 @@ export function AListColumnsEditor({ columns, onChange }: AListColumnsEditorProp
 				{columns.length === 0 ? (
 					<Card className='p-8 text-center text-muted-foreground'>
 						<p>No columns configured yet.</p>
-						<p className='text-sm mt-2'>Click "Add Column" to get started.</p>
+						<p className='text-sm mt-2'>Click &quot;Add Column&quot; to get started.</p>
 					</Card>
 				) : (
-					columns.map((column, index) => (
+					columns.map(column => (
 						<Card key={column.id} className='p-3 hover:bg-muted/50 transition-colors'>
 							<div className='flex items-center gap-3'>
 								<GripVertical className='h-4 w-4 text-muted-foreground cursor-move flex-shrink-0' />

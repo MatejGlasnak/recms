@@ -21,94 +21,95 @@ import {
 	FormLabel,
 	FormMessage
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
-import { useUpdateListConfig } from '@/lib/hooks/use-list-config'
-import type { ListConfig } from '@/lib/types/list-config'
+import { useUpdateListConfig } from '../../hooks'
+import type { ListConfig } from '../../types'
+import { EditableWrapper } from '../ui/EditableWrapper'
 
 const formSchema = z.object({
-	title: z.string().min(1, 'Title is required')
+	description: z.string().min(1, 'Description is required')
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-interface AListPageTitleProps {
+export interface ListPageDescriptionProps {
 	resourceId: string
 	currentConfig: ListConfig | undefined
 	editMode: boolean
-	defaultTitle: string
+	defaultDescription: string
 }
 
-export function AListPageTitle({
+export function ListPageDescription({
 	resourceId,
 	currentConfig,
 	editMode,
-	defaultTitle
-}: AListPageTitleProps) {
+	defaultDescription
+}: ListPageDescriptionProps) {
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const updateMutation = useUpdateListConfig(resourceId)
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			title: ''
-		}
+		defaultValues: { description: '' }
 	})
 
-	// Update form values when config changes
 	useEffect(() => {
 		if (currentConfig) {
 			form.reset({
-				title: currentConfig.meta?.title || defaultTitle
+				description: currentConfig.meta?.description || defaultDescription
 			})
 		}
-	}, [currentConfig, defaultTitle, form])
+	}, [currentConfig, defaultDescription, form])
 
 	const onSubmit = async (values: FormValues) => {
 		try {
 			await updateMutation.mutateAsync({
 				meta: {
 					...currentConfig?.meta,
-					title: values.title
+					description: values.description
 				}
 			})
 			setDialogOpen(false)
 		} catch (error) {
-			console.error('Error updating title:', error)
+			console.error('Error updating description:', error)
 		}
 	}
 
-	const displayTitle = currentConfig?.meta?.title || defaultTitle
+	const displayDescription = currentConfig?.meta?.description || defaultDescription
 
 	return (
 		<>
-			{editMode ? (
-				<div
-					className='cursor-pointer transition-all border-2 border-dashed border-muted-foreground/30 rounded-md p-2 hover:border-muted-foreground/60 hover:bg-muted/30'
-					onClick={() => setDialogOpen(true)}
-				>
-					<h1 className='text-3xl font-bold tracking-tight'>{displayTitle}</h1>
-				</div>
-			) : (
-				<h1 className='text-3xl font-bold tracking-tight'>{displayTitle}</h1>
-			)}
+			<EditableWrapper
+				editMode={editMode}
+				onEditClick={() => setDialogOpen(true)}
+				className='p-2'
+			>
+				<p className='text-muted-foreground'>{displayDescription}</p>
+			</EditableWrapper>
 
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogContent className='sm:max-w-[500px]'>
 					<DialogHeader>
-						<DialogTitle>Edit Page Title</DialogTitle>
-						<DialogDescription>Update the title for this list page.</DialogDescription>
+						<DialogTitle>Edit Description</DialogTitle>
+						<DialogDescription>
+							Update the description for this list page.
+						</DialogDescription>
 					</DialogHeader>
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
 							<FormField
 								control={form.control}
-								name='title'
+								name='description'
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Title</FormLabel>
+										<FormLabel>Description</FormLabel>
 										<FormControl>
-											<Input placeholder='Enter page title' {...field} />
+											<Textarea
+												placeholder='Enter page description'
+												rows={3}
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
