@@ -1,6 +1,7 @@
 export interface Resource {
 	id: string
 	name: string
+	label: string
 	endpoint: string
 	methods?: ResourceMethod[]
 }
@@ -13,5 +14,6 @@ export interface ResourceMethod {
 
 export interface ResourceFormData {
 	name: string
+	label: string
 	endpoint: string
 }

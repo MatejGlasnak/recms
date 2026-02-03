@@ -61,7 +61,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 					title: 'Success',
 					description: 'Logged in successfully'
 				})
-				router.push('/dashboard')
+				router.push('/admin/dashboard')
 				router.refresh()
 			}
 		} catch {
@@ -97,7 +97,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 											<FormControl>
 												<Input
 													type='email'
-													placeholder='m@example.com'
+													placeholder='example@example.com'
 													autoComplete='email'
 													{...field}
 													disabled={isLoading}

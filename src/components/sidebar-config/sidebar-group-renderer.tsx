@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ChevronRight, type LucideIcon } from 'lucide-react'
+import { useGo, useResourceParams } from '@refinedev/core'
 import {
 	SidebarGroup,
 	SidebarGroupLabel,
@@ -20,7 +21,79 @@ interface SidebarGroupRendererProps {
 	group: SidebarGroupType
 }
 
-function renderItem(item: SidebarItem, depth = 0): React.ReactNode {
+/**
+ * Component for rendering a resource item with Refine navigation
+ */
+function ResourceMenuItem({ item, Icon }: { item: SidebarItem; Icon?: LucideIcon }) {
+	const go = useGo()
+
+	// Get the resource directly by passing the resourceId (which is the identifier)
+	// Note: Only call this for resource items, so we pass the resourceId conditionally
+	const { resource } = useResourceParams(
+		item.type === 'resource' ? { resource: item.resourceId } : {}
+	)
+
+	if (item.type !== 'resource') return null
+
+	const label = item.label || item.resourceName
+
+	const handleClick = (e: React.MouseEvent) => {
+		e.preventDefault()
+
+		if (resource) {
+			// Use Refine's navigation to go to the resource list page
+			go({
+				to: resource.list || `/${resource.name}`,
+				type: 'push'
+			})
+		}
+	}
+
+	return (
+		<SidebarMenuButton onClick={handleClick}>
+			{Icon && <Icon />}
+			<span>{label}</span>
+		</SidebarMenuButton>
+	)
+}
+
+/**
+ * Component for rendering a resource item in submenu with Refine navigation
+ */
+function ResourceMenuSubButton({ item, Icon }: { item: SidebarItem; Icon?: LucideIcon }) {
+	const go = useGo()
+
+	// Get the resource directly by passing the resourceId (which is the identifier)
+	// Note: Only call this for resource items, so we pass the resourceId conditionally
+	const { resource } = useResourceParams(
+		item.type === 'resource' ? { resource: item.resourceId } : {}
+	)
+
+	if (item.type !== 'resource') return null
+
+	const label = item.label || item.resourceName
+
+	const handleClick = (e: React.MouseEvent) => {
+		e.preventDefault()
+
+		if (resource) {
+			// Use Refine's navigation to go to the resource list page
+			go({
+				to: resource.list || `/${resource.name}`,
+				type: 'push'
+			})
+		}
+	}
+
+	return (
+		<SidebarMenuSubButton onClick={handleClick}>
+			{Icon && <Icon />}
+			<span>{label}</span>
+		</SidebarMenuSubButton>
+	)
+}
+
+function renderItem(item: SidebarItem): React.ReactNode {
 	const Icon = item.icon ? AVAILABLE_ICONS[item.icon] : undefined
 
 	if (item.type === 'group') {
@@ -62,16 +135,9 @@ function renderItem(item: SidebarItem, depth = 0): React.ReactNode {
 	}
 
 	if (item.type === 'resource') {
-		const label = item.label || item.resourceName
-		// In the future, this will link to the actual resource
 		return (
 			<SidebarMenuItem key={item.id}>
-				<SidebarMenuButton asChild>
-					<Link href={`#resource-${item.resourceId}`}>
-						{Icon && <Icon />}
-						<span>{label}</span>
-					</Link>
-				</SidebarMenuButton>
+				<ResourceMenuItem item={item} Icon={Icon} />
 			</SidebarMenuItem>
 		)
 	}
@@ -118,15 +184,7 @@ function renderSubItem(item: SidebarItem): React.ReactNode {
 	}
 
 	if (item.type === 'resource') {
-		const label = item.label || item.resourceName
-		return (
-			<SidebarMenuSubButton asChild>
-				<Link href={`#resource-${item.resourceId}`}>
-					{Icon && <Icon />}
-					<span>{label}</span>
-				</Link>
-			</SidebarMenuSubButton>
-		)
+		return <ResourceMenuSubButton item={item} Icon={Icon} />
 	}
 
 	return null
@@ -134,7 +192,8 @@ function renderSubItem(item: SidebarItem): React.ReactNode {
 
 export function SidebarGroupRenderer({ group }: SidebarGroupRendererProps) {
 	const visibleItems = group.maxItems ? group.items.slice(0, group.maxItems) : group.items
-	const hasMore = group.maxItems && group.items.length > group.maxItems
+	const hasMore = group.maxItems !== undefined && group.items.length > group.maxItems
+	const remainingCount = group.maxItems !== undefined ? group.items.length - group.maxItems : 0
 
 	return (
 		<SidebarGroup>
@@ -144,7 +203,7 @@ export function SidebarGroupRenderer({ group }: SidebarGroupRendererProps) {
 				{hasMore && (
 					<SidebarMenuItem>
 						<SidebarMenuButton className='text-sidebar-foreground/70'>
-							<span>...{group.items.length - group.maxItems} more</span>
+							<span>...{remainingCount} more</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				)}

@@ -5,6 +5,7 @@ import type { Resource } from '@/lib/types/resources'
 
 const resourceSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
+	label: z.string().min(1, 'Label is required'),
 	endpoint: z.string().min(1, 'Endpoint is required'),
 	methods: z
 		.array(
@@ -27,6 +28,7 @@ export async function GET() {
 		const transformedResources = resources.map(resource => ({
 			id: resource._id,
 			name: resource.name,
+			label: resource.label,
 			endpoint: resource.endpoint,
 			methods: resource.methods
 		}))

@@ -5,6 +5,7 @@ import type { Resource } from '@/lib/types/resources'
 
 const resourceSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
+	label: z.string().min(1, 'Label is required'),
 	endpoint: z.string().min(1, 'Endpoint is required'),
 	methods: z
 		.array(
@@ -18,9 +19,9 @@ const resourceSchema = z.object({
 })
 
 // GET - Fetch a single resource by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	try {
-		const { id } = params
+		const { id } = await params
 		const collection = await getAppResourcesCollection()
 		const resource = await collection.findOne({ _id: id })
 
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 		const transformedResource: Resource = {
 			id: resource._id,
 			name: resource.name,
+			label: resource.label,
 			endpoint: resource.endpoint,
 			methods: resource.methods
 		}
@@ -43,9 +45,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT - Update a resource
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	try {
-		const { id } = params
+		const { id } = await params
 		const body = await request.json()
 
 		// Validate input
@@ -100,9 +102,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE - Delete a resource
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> }
+) {
 	try {
-		const { id } = params
+		const { id } = await params
 		const collection = await getAppResourcesCollection()
 
 		// Check if resource exists

@@ -106,12 +106,19 @@ export default function ResourcesPage() {
 									<div className='flex items-start justify-between gap-4'>
 										<div className='flex-1 min-w-0'>
 											<CardTitle className='text-base font-medium'>
-												{resource.name}
+												{resource.label}
 											</CardTitle>
-											<CardDescription className='mt-1'>
-												<code className='text-xs bg-muted px-2 py-0.5 rounded'>
-													{resource.endpoint}
-												</code>
+											<CardDescription className='mt-1 space-y-1'>
+												<div>
+													<code className='text-xs bg-muted px-2 py-0.5 rounded'>
+														{resource.name}
+													</code>
+												</div>
+												<div>
+													<code className='text-xs bg-muted px-2 py-0.5 rounded'>
+														{resource.endpoint}
+													</code>
+												</div>
 											</CardDescription>
 										</div>
 										<div className='flex gap-1 shrink-0'>

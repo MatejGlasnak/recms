@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePageSetup } from '@/lib/contexts/page-context'
@@ -17,8 +16,8 @@ import { useResource, useCreateResource, useUpdateResource } from '@/lib/hooks/u
 
 const resourceSchema = z.object({
 	name: z.string().min(1, 'Resource name is required'),
-	endpoint: z.string().min(1, 'API endpoint is required'),
-	description: z.string().optional()
+	label: z.string().min(1, 'Resource label is required'),
+	endpoint: z.string().min(1, 'API endpoint is required')
 })
 
 type ResourceFormValues = z.infer<typeof resourceSchema>
@@ -42,8 +41,8 @@ export default function ResourceEditPage({ params }: { params: { id: string } })
 		resolver: zodResolver(resourceSchema),
 		defaultValues: {
 			name: '',
-			endpoint: '',
-			description: ''
+			label: '',
+			endpoint: ''
 		}
 	})
 
@@ -52,8 +51,8 @@ export default function ResourceEditPage({ params }: { params: { id: string } })
 		if (resource) {
 			form.reset({
 				name: resource.name,
-				endpoint: resource.endpoint,
-				description: resource.description || ''
+				label: resource.label,
+				endpoint: resource.endpoint
 			})
 		}
 	}, [resource, form])
@@ -90,18 +89,38 @@ export default function ResourceEditPage({ params }: { params: { id: string } })
 							Resource Configuration
 						</CardTitle>
 						<CardDescription className='text-xs'>
-							Define the resource name, API endpoint, and description
+							Define the resource identifier, label, and API endpoint
 						</CardDescription>
 					</CardHeader>
 					<CardContent className='p-4 pt-0'>
 						<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+							<div className='space-y-2'>
+								<Label htmlFor='label' className='text-sm'>
+									Display Label
+								</Label>
+								<Input
+									id='label'
+									placeholder='e.g., Blog Categories'
+									{...form.register('label')}
+									className='h-9'
+								/>
+								{form.formState.errors.label && (
+									<p className='text-xs text-destructive'>
+										{form.formState.errors.label.message}
+									</p>
+								)}
+								<p className='text-xs text-muted-foreground'>
+									Human-readable name shown in the UI (e.g., sidebar, settings)
+								</p>
+							</div>
+
 							<div className='space-y-2'>
 								<Label htmlFor='name' className='text-sm'>
 									Resource Name
 								</Label>
 								<Input
 									id='name'
-									placeholder='e.g., Blog Categories'
+									placeholder='e.g., blog-categories'
 									{...form.register('name')}
 									className='h-9'
 								/>
@@ -111,7 +130,8 @@ export default function ResourceEditPage({ params }: { params: { id: string } })
 									</p>
 								)}
 								<p className='text-xs text-muted-foreground'>
-									A human-readable name for this resource
+									Internal identifier for this resource (use kebab-case, e.g.,
+									post-categories, user-profiles)
 								</p>
 							</div>
 
@@ -132,22 +152,6 @@ export default function ResourceEditPage({ params }: { params: { id: string } })
 								)}
 								<p className='text-xs text-muted-foreground'>
 									The base URL path for this resource&apos;s REST API
-								</p>
-							</div>
-
-							<div className='space-y-2'>
-								<Label htmlFor='description' className='text-sm'>
-									Description
-								</Label>
-								<Textarea
-									id='description'
-									placeholder='Describe what this resource is used for'
-									{...form.register('description')}
-									rows={3}
-									className='text-sm'
-								/>
-								<p className='text-xs text-muted-foreground'>
-									Optional description to help identify this resource
 								</p>
 							</div>
 

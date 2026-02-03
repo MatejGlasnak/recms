@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,11 +12,11 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
-import { Loader2, Plus, ExternalLink } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import type { SidebarItem, SidebarItemType } from '@/lib/types/sidebar-config'
-import type { Resource } from '@/lib/types/resources'
 import { ICON_OPTIONS } from '@/lib/constants/icons'
+import { useResources } from '@/lib/hooks/use-resources'
 
 interface SidebarItemEditorProps {
 	item?: SidebarItem
@@ -32,29 +32,9 @@ export function SidebarItemEditor({ item, onSave, onCancel }: SidebarItemEditorP
 	const [resourceId, setResourceId] = useState(
 		item?.type === 'resource' ? (item as any).resourceId : ''
 	)
-	const [availableResources, setAvailableResources] = useState<Resource[]>([])
-	const [loadingResources, setLoadingResources] = useState(false)
 
-	// Fetch resources from API
-	useEffect(() => {
-		fetchResources()
-	}, [])
-
-	const fetchResources = async () => {
-		try {
-			setLoadingResources(true)
-			const response = await fetch('/api/admin/config/resources')
-			if (!response.ok) {
-				throw new Error('Failed to fetch resources')
-			}
-			const data = await response.json()
-			setAvailableResources(data)
-		} catch (error) {
-			console.error('Error fetching resources:', error)
-		} finally {
-			setLoadingResources(false)
-		}
-	}
+	// Fetch resources using TanStack Query
+	const { data: availableResources = [], isLoading: loadingResources } = useResources()
 
 	const handleSave = () => {
 		const baseItem = {
@@ -73,8 +53,8 @@ export function SidebarItemEditor({ item, onSave, onCancel }: SidebarItemEditorP
 					...baseItem,
 					type: 'resource',
 					resourceId: resourceId || '1',
-					resourceName: resource?.name || 'Unknown Resource',
-					label: label || resource?.name
+					resourceName: resource?.label || 'Unknown Resource',
+					label: label || resource?.label
 				}
 				break
 			}
@@ -162,7 +142,7 @@ export function SidebarItemEditor({ item, onSave, onCancel }: SidebarItemEditorP
 									) : (
 										availableResources.map(resource => (
 											<SelectItem key={resource.id} value={resource.id}>
-												{resource.name}
+												{resource.label}x
 											</SelectItem>
 										))
 									)}
@@ -196,8 +176,8 @@ export function SidebarItemEditor({ item, onSave, onCancel }: SidebarItemEditorP
 							onChange={e => setLabel(e.target.value)}
 							placeholder={
 								type === 'resource'
-									? availableResources.find(r => r.id === resourceId)?.name ||
-									  'Resource name'
+									? availableResources.find(r => r.id === resourceId)?.label ||
+									  'Resource label'
 									: 'Item label'
 							}
 							disabled={loadingResources && type === 'resource'}

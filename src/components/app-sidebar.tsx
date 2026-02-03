@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { ArrowUpCircleIcon, Settings, Sparkles } from 'lucide-react'
+import { Home, Loader2, Settings, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 import { NavUser } from '@/components/nav-user'
@@ -20,8 +20,8 @@ import { useSidebarConfig } from '@/lib/contexts/sidebar-config-context'
 import { SidebarGroupRenderer } from '@/components/sidebar-config/sidebar-group-renderer'
 
 const userData = {
-	name: 'shadcn',
-	email: 'm@example.com',
+	name: 'Matej Glasnak',
+	email: 'matej.glasnak@blume.sk',
 	avatar: '/avatars/shadcn.jpg'
 }
 
@@ -40,7 +40,7 @@ const bottomItems = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-	const { config } = useSidebarConfig()
+	const { config, isLoading } = useSidebarConfig()
 
 	return (
 		<Sidebar collapsible='offcanvas' {...props}>
@@ -51,18 +51,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							asChild
 							className='data-[slot=sidebar-menu-button]:!p-1.5'
 						>
-							<a href='#'>
-								<ArrowUpCircleIcon className='h-5 w-5' />
-								<span className='text-base font-semibold'>Acme Inc.</span>
-							</a>
+							<Link href='/admin/dashboard'>
+								<Home className='h-5 w-5' />
+								<span className='text-base font-semibold'>ReCMS</span>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				{config.groups.map(group => (
-					<SidebarGroupRenderer key={group.id} group={group} />
-				))}
+				{isLoading ? (
+					<div className='flex items-center justify-center h-full'>
+						<Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+					</div>
+				) : config && config.groups.length > 0 ? (
+					<>
+						{config.groups.map(group => (
+							<SidebarGroupRenderer key={group.id} group={group} />
+						))}
+					</>
+				) : null}
 
 				{/* Hardcoded bottom items */}
 				<SidebarGroup className='mt-auto'>

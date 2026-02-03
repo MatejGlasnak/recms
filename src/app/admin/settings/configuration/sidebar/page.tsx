@@ -2,11 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { usePageSetup } from '@/lib/contexts/page-context'
-import { useSidebarConfig } from '@/lib/contexts/sidebar-config-context'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Plus, Save, Loader2 } from 'lucide-react'
-import type { SidebarGroup } from '@/lib/types/sidebar-config'
+import type { SidebarConfig, SidebarGroup } from '@/lib/types/sidebar-config'
 import { SidebarGroupEditor } from '@/components/sidebar-config/sidebar-group-editor'
 import { useSidebarConfigQuery, useUpdateSidebarConfig } from '@/lib/hooks/use-sidebar-config'
 
@@ -17,28 +16,23 @@ export default function SidebarConfigPage() {
 		{ label: 'Sidebar' }
 	])
 
-	const { config, setConfig } = useSidebarConfig()
 	const { data: fetchedConfig, isLoading } = useSidebarConfigQuery()
 	const updateMutation = useUpdateSidebarConfig()
+	
+	const [config, setConfig] = useState<SidebarConfig>({ groups: [] })
 	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set())
-	const initializedRef = useRef(false)
-
-	// Update local config when data is fetched
+	const hasSyncedRef = useRef(false)
+	
+	// Initialize local config from fetched data once
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
-		if (fetchedConfig) {
+		if (fetchedConfig && !hasSyncedRef.current) {
+			hasSyncedRef.current = true
 			setConfig(fetchedConfig)
+			setExpandedGroups(new Set(fetchedConfig.groups.map(g => g.id)))
 		}
-	}, [fetchedConfig, setConfig])
-
-	// Initialize expanded groups once when config is loaded
-	useEffect(() => {
-		if (!initializedRef.current && config.groups.length > 0) {
-			// This only runs once on initial load, ref prevents cascading renders
-			// eslint-disable-next-line
-			setExpandedGroups(new Set(config.groups.map(g => g.id)))
-			initializedRef.current = true
-		}
-	}, [config.groups])
+		// Dependencies intentionally minimal - we only want to sync once on initial load
+	}, [fetchedConfig])
 
 	const addGroup = () => {
 		const newGroup: SidebarGroup = {
@@ -99,7 +93,12 @@ export default function SidebarConfigPage() {
 	}
 
 	const handleSave = () => {
-		updateMutation.mutate(config)
+		updateMutation.mutate(config, {
+			onSuccess: () => {
+				// Reset sync flag so we can sync with updated server data
+				hasSyncedRef.current = false
+			}
+		})
 	}
 
 	return (

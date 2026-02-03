@@ -21,6 +21,7 @@ import type { Resource } from '@/lib/types/resources'
 
 const resourceSchema = z.object({
 	name: z.string().min(1, 'Resource name is required'),
+	label: z.string().min(1, 'Resource label is required'),
 	endpoint: z.string().min(1, 'API endpoint is required')
 })
 
@@ -41,6 +42,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 		resolver: zodResolver(resourceSchema),
 		defaultValues: {
 			name: '',
+			label: '',
 			endpoint: ''
 		}
 	})
@@ -51,11 +53,13 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 			if (resource) {
 				form.reset({
 					name: resource.name,
+					label: resource.label,
 					endpoint: resource.endpoint
 				})
 			} else {
 				form.reset({
 					name: '',
+					label: '',
 					endpoint: ''
 				})
 			}
@@ -87,12 +91,32 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 				</DialogHeader>
 				<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
 					<div className='space-y-2'>
+						<Label htmlFor='label' className='text-sm'>
+							Display Label
+						</Label>
+						<Input
+							id='label'
+							placeholder='e.g., Blog Categories'
+							{...form.register('label')}
+							className='h-9'
+						/>
+						{form.formState.errors.label && (
+							<p className='text-xs text-destructive'>
+								{form.formState.errors.label.message}
+							</p>
+						)}
+						<p className='text-xs text-muted-foreground'>
+							Human-readable name shown in the UI
+						</p>
+					</div>
+
+					<div className='space-y-2'>
 						<Label htmlFor='name' className='text-sm'>
 							Resource Name
 						</Label>
 						<Input
 							id='name'
-							placeholder='e.g., Blog Categories'
+							placeholder='e.g., blog-categories'
 							{...form.register('name')}
 							className='h-9'
 						/>
@@ -102,7 +126,8 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 							</p>
 						)}
 						<p className='text-xs text-muted-foreground'>
-							A human-readable name for this resource
+							Internal identifier (use kebab-case, e.g., post-categories,
+							user-profiles)
 						</p>
 					</div>
 

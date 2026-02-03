@@ -63,3 +63,9 @@ export async function getAppSidebarConfigCollection(): Promise<
 	const db = await getDatabase()
 	return db.collection('app_sidebar_config')
 }
+
+// Helper to get app resources lists collection (for storing list page configurations)
+export async function getAppResourcesListsCollection(): Promise<Collection> {
+	const db = await getDatabase()
+	return db.collection('app_resources_lists')
+}

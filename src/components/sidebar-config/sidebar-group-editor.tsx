@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,11 +29,11 @@ import {
 	GripVertical,
 	Plus,
 	ChevronRight,
-	FileText,
 	Loader2
 } from 'lucide-react'
 import type { SidebarGroup, SidebarItem } from '@/lib/types/sidebar-config'
-import { ICON_OPTIONS, AVAILABLE_ICONS } from '@/lib/constants/icons'
+import { ICON_OPTIONS } from '@/lib/constants/icons'
+import { useResources } from '@/lib/hooks/use-resources'
 
 interface SidebarGroupEditorProps {
 	group: SidebarGroup
@@ -60,29 +60,9 @@ export function SidebarGroupEditor({
 	const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false)
 	const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 	const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
-	const [availableResources, setAvailableResources] = useState<any[]>([])
-	const [loadingResources, setLoadingResources] = useState(false)
 
-	// Fetch resources from API
-	useEffect(() => {
-		fetchResources()
-	}, [])
-
-	const fetchResources = async () => {
-		try {
-			setLoadingResources(true)
-			const response = await fetch('/api/admin/config/resources')
-			if (!response.ok) {
-				throw new Error('Failed to fetch resources')
-			}
-			const data = await response.json()
-			setAvailableResources(data)
-		} catch (error) {
-			console.error('Error fetching resources:', error)
-		} finally {
-			setLoadingResources(false)
-		}
-	}
+	// Fetch resources using TanStack Query
+	const { data: availableResources = [], isLoading: loadingResources } = useResources()
 
 	const updateField = (field: keyof SidebarGroup, value: any) => {
 		onUpdate({ ...group, [field]: value })
@@ -167,6 +147,26 @@ export function SidebarGroupEditor({
 							...item,
 							items: (item as any).items.filter(
 								(i: SidebarItem) => i.id !== nestedItemId
+							)
+					  }
+					: item
+			)
+		})
+	}
+
+	const updateNestedItem = (
+		parentItemId: string,
+		nestedItemId: string,
+		updatedNestedItem: SidebarItem
+	) => {
+		onUpdate({
+			...group,
+			items: group.items.map(item =>
+				item.id === parentItemId && item.type === 'group'
+					? {
+							...item,
+							items: (item as any).items.map((i: SidebarItem) =>
+								i.id === nestedItemId ? updatedNestedItem : i
 							)
 					  }
 					: item
@@ -510,6 +510,12 @@ export function SidebarGroupEditor({
 																			item.id,
 																			newNestedItem
 																		)
+																		// Auto-expand the new nested item
+																		setExpandedItems(prev =>
+																			new Set(prev).add(
+																				newNestedItem.id
+																			)
+																		)
 																	}}
 																>
 																	<Plus className='h-4 w-4 mr-2' />
@@ -519,53 +525,369 @@ export function SidebarGroupEditor({
 
 															<div className='space-y-2'>
 																{((item as any).items || []).map(
-																	(nestedItem: SidebarItem) => (
-																		<Card key={nestedItem.id}>
-																			<CardHeader>
-																				<div className='flex items-center gap-2'>
-																					<div className='flex items-center justify-center w-8 h-8 rounded bg-muted'>
-																						{(() => {
-																							const IconComponent =
-																								nestedItem.icon &&
-																								AVAILABLE_ICONS[
-																									nestedItem
-																										.icon
-																								]
-																							return IconComponent ? (
-																								<IconComponent className='h-4 w-4 text-muted-foreground' />
-																							) : (
-																								<FileText className='h-4 w-4 text-muted-foreground' />
-																							)
-																						})()}
-																					</div>
-																					<div className='flex-1 min-w-0'>
-																						<div className='font-medium'>
-																							{nestedItem.label ||
-																								nestedItem.type}
-																						</div>
-																						<div className='text-sm text-muted-foreground'>
-																							{
-																								nestedItem.type
+																	(nestedItem: SidebarItem) => {
+																		const isNestedItemExpanded =
+																			expandedItems.has(
+																				nestedItem.id
+																			)
+																		return (
+																			<Card
+																				key={nestedItem.id}
+																			>
+																				<CardHeader>
+																					<div className='flex items-center gap-2'>
+																						<Button
+																							variant='ghost'
+																							size='sm'
+																							className='cursor-move'
+																						>
+																							<GripVertical className='h-4 w-4' />
+																						</Button>
+
+																						<Button
+																							variant='ghost'
+																							size='sm'
+																							onClick={() =>
+																								toggleItem(
+																									nestedItem.id
+																								)
 																							}
+																						>
+																							<ChevronRight
+																								className={`h-4 w-4 transition-transform ${
+																									isNestedItemExpanded
+																										? 'rotate-90'
+																										: ''
+																								}`}
+																							/>
+																						</Button>
+
+																						<div className='flex-1 min-w-0'>
+																							<Input
+																								value={
+																									nestedItem.label ||
+																									''
+																								}
+																								onChange={e => {
+																									const updatedNestedItem =
+																										{
+																											...nestedItem,
+																											label: e
+																												.target
+																												.value
+																										}
+																									updateNestedItem(
+																										item.id,
+																										nestedItem.id,
+																										updatedNestedItem
+																									)
+																								}}
+																								placeholder='Item name'
+																							/>
 																						</div>
+
+																						<Button
+																							variant='ghost'
+																							size='sm'
+																							className='text-destructive'
+																							onClick={() =>
+																								deleteNestedItem(
+																									item.id,
+																									nestedItem.id
+																								)
+																							}
+																						>
+																							<Trash2 className='h-4 w-4' />
+																						</Button>
 																					</div>
-																					<Button
-																						variant='ghost'
-																						size='sm'
-																						className='text-destructive'
-																						onClick={() =>
-																							deleteNestedItem(
-																								item.id,
-																								nestedItem.id
-																							)
-																						}
-																					>
-																						<Trash2 className='h-4 w-4' />
-																					</Button>
-																				</div>
-																			</CardHeader>
-																		</Card>
-																	)
+																				</CardHeader>
+
+																				{isNestedItemExpanded && (
+																					<CardContent>
+																						<div className='space-y-4'>
+																							<div className='space-y-2'>
+																								<Label>
+																									Item
+																									Type
+																								</Label>
+																								<Select
+																									value={
+																										nestedItem.type
+																									}
+																									onValueChange={value => {
+																										let updatedNestedItem: SidebarItem
+																										if (
+																											value ===
+																											'resource'
+																										) {
+																											updatedNestedItem =
+																												{
+																													id: nestedItem.id,
+																													type: 'resource',
+																													resourceId:
+																														availableResources[0]
+																															?.id ||
+																														'1',
+																													resourceName:
+																														availableResources[0]
+																															?.name ||
+																														'Unknown',
+																													label: nestedItem.label,
+																													icon: nestedItem.icon
+																												}
+																										} else if (
+																											value ===
+																											'link'
+																										) {
+																											updatedNestedItem =
+																												{
+																													id: nestedItem.id,
+																													type: 'link',
+																													href: '#',
+																													label:
+																														nestedItem.label ||
+																														'New Link',
+																													icon: nestedItem.icon
+																												}
+																										} else {
+																											updatedNestedItem =
+																												{
+																													id: nestedItem.id,
+																													type: 'group',
+																													label:
+																														nestedItem.label ||
+																														'New Group',
+																													items: [],
+																													icon: nestedItem.icon
+																												}
+																										}
+																										updateNestedItem(
+																											item.id,
+																											nestedItem.id,
+																											updatedNestedItem
+																										)
+																									}}
+																								>
+																									<SelectTrigger>
+																										<SelectValue />
+																									</SelectTrigger>
+																									<SelectContent>
+																										<SelectItem value='link'>
+																											Link
+																										</SelectItem>
+																										<SelectItem value='resource'>
+																											Resource
+																										</SelectItem>
+																										<SelectItem value='group'>
+																											Group
+																										</SelectItem>
+																									</SelectContent>
+																								</Select>
+																							</div>
+
+																							{nestedItem.type ===
+																								'resource' && (
+																								<div className='space-y-2'>
+																									<Label>
+																										Resource
+																									</Label>
+																									<Select
+																										value={
+																											(
+																												nestedItem as any
+																											)
+																												.resourceId
+																										}
+																										onValueChange={value => {
+																											const resource =
+																												availableResources.find(
+																													r =>
+																														r.id ===
+																														value
+																												)
+																											const updatedNestedItem =
+																												{
+																													...nestedItem,
+																													resourceId:
+																														value,
+																													resourceName:
+																														resource?.name ||
+																														'Unknown',
+																													label:
+																														nestedItem.label ||
+																														resource?.name
+																												}
+																											updateNestedItem(
+																												item.id,
+																												nestedItem.id,
+																												updatedNestedItem
+																											)
+																										}}
+																										disabled={
+																											loadingResources
+																										}
+																									>
+																										<SelectTrigger>
+																											<SelectValue
+																												placeholder={
+																													loadingResources
+																														? 'Loading resources...'
+																														: 'Select a resource'
+																												}
+																											/>
+																										</SelectTrigger>
+																										<SelectContent>
+																											{loadingResources ? (
+																												<div className='flex items-center justify-center p-2'>
+																													<Loader2 className='h-4 w-4 animate-spin' />
+																												</div>
+																											) : availableResources.length ===
+																											  0 ? (
+																												<div className='p-2 text-center text-sm text-muted-foreground'>
+																													No
+																													resources
+																													available
+																												</div>
+																											) : (
+																												availableResources.map(
+																													resource => (
+																														<SelectItem
+																															key={
+																																resource.id
+																															}
+																															value={
+																																resource.id
+																															}
+																														>
+																															{
+																																resource.name
+																															}
+																														</SelectItem>
+																													)
+																												)
+																											)}
+																										</SelectContent>
+																									</Select>
+																								</div>
+																							)}
+
+																							{nestedItem.type ===
+																								'link' && (
+																								<div className='space-y-2'>
+																									<Label>
+																										URL
+																									</Label>
+																									<Input
+																										value={
+																											(
+																												nestedItem as any
+																											)
+																												.href ||
+																											''
+																										}
+																										onChange={e => {
+																											const updatedNestedItem =
+																												{
+																													...nestedItem,
+																													href: e
+																														.target
+																														.value
+																												}
+																											updateNestedItem(
+																												item.id,
+																												nestedItem.id,
+																												updatedNestedItem
+																											)
+																										}}
+																										placeholder='/admin/page'
+																									/>
+																								</div>
+																							)}
+
+																							<div className='space-y-2'>
+																								<Label>
+																									Icon
+																									(optional)
+																								</Label>
+																								<Select
+																									value={
+																										nestedItem.icon ||
+																										'none'
+																									}
+																									onValueChange={value => {
+																										const updatedNestedItem =
+																											{
+																												...nestedItem,
+																												icon:
+																													value ===
+																													'none'
+																														? undefined
+																														: value
+																											}
+																										updateNestedItem(
+																											item.id,
+																											nestedItem.id,
+																											updatedNestedItem
+																										)
+																									}}
+																								>
+																									<SelectTrigger>
+																										<SelectValue placeholder='Select an icon' />
+																									</SelectTrigger>
+																									<SelectContent>
+																										<SelectItem value='none'>
+																											None
+																										</SelectItem>
+																										{ICON_OPTIONS.map(
+																											option => (
+																												<SelectItem
+																													key={
+																														option.value
+																													}
+																													value={
+																														option.value
+																													}
+																												>
+																													{
+																														option.label
+																													}
+																												</SelectItem>
+																											)
+																										)}
+																									</SelectContent>
+																								</Select>
+																							</div>
+
+																							{nestedItem.type ===
+																								'group' && (
+																								<div className='p-3 border rounded-md bg-muted/50'>
+																									<p className='text-xs text-muted-foreground'>
+																										⚠️
+																										Nested
+																										groups
+																										within
+																										groups
+																										are
+																										not
+																										recommended
+																										for
+																										UI
+																										simplicity.
+																										Consider
+																										using
+																										a
+																										top-level
+																										group
+																										instead.
+																									</p>
+																								</div>
+																							)}
+																						</div>
+																					</CardContent>
+																				)}
+																			</Card>
+																		)
+																	}
 																)}
 															</div>
 														</div>

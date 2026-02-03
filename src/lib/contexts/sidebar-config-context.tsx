@@ -1,36 +1,21 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, ReactNode } from 'react'
 import type { SidebarConfig } from '@/lib/types/sidebar-config'
+import { useSidebarConfigQuery } from '@/lib/hooks/use-sidebar-config'
 
 interface SidebarConfigContextType {
-	config: SidebarConfig
-	setConfig: (config: SidebarConfig) => void
+	config: SidebarConfig | null
+	isLoading: boolean
 }
 
 const SidebarConfigContext = createContext<SidebarConfigContextType | undefined>(undefined)
 
-const defaultConfig: SidebarConfig = {
-	groups: [
-		{
-			id: 'group-main',
-			title: undefined,
-			items: []
-		},
-		{
-			id: 'group-documents',
-			title: 'Documents',
-			maxItems: 3,
-			items: []
-		}
-	]
-}
-
 export function SidebarConfigProvider({ children }: { children: ReactNode }) {
-	const [config, setConfig] = useState<SidebarConfig>(defaultConfig)
+	const { data, isLoading } = useSidebarConfigQuery()
 
 	return (
-		<SidebarConfigContext.Provider value={{ config, setConfig }}>
+		<SidebarConfigContext.Provider value={{ config: data ?? null, isLoading }}>
 			{children}
 		</SidebarConfigContext.Provider>
 	)
