@@ -1,0 +1,64 @@
+{
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact"
+	],
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll": "explicit",
+		"source.fixAll.eslint": "explicit",
+		"source.organizeImports.eslint": "explicit",
+		"source.removeUnusedImports.typescript": "explicit"
+	},
+
+	"prettier.requireConfig": true,
+
+	"editor.insertSpaces": false,
+
+	"typescript.updateImportsOnFileMove.enabled": "always",
+
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	},
+	"javascript.format.semicolons": "remove",
+	"typescript.format.insertSpaceAfterConstructor": true,
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true,
+	"typescript.format.insertSpaceAfterTypeAssertion": true,
+	"typescript.format.insertSpaceBeforeFunctionParenthesis": true,
+	"typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
+	"typescript.format.placeOpenBraceOnNewLineForFunctions": true,
+	"typescript.format.semicolons": "remove",
+	"prettier.bracketSameLine": true,
+	"prettier.jsxSingleQuote": true,
+	"prettier.printWidth": 1000,
+	"prettier.semi": false,
+	"prettier.singleQuote": true,
+	"prettier.useEditorConfig": false,
+	"prettier.tabWidth": 4,
+	"prettier.trailingComma": "none",
+	"prettier.proseWrap": "never",
+	"prettier.useTabs": true,
+	"files.trimTrailingWhitespace": true,
+	"html.format.wrapLineLength": 0,
+	"javascript.updateImportsOnFileMove.enabled": "never",
+	"editor.formatOnPaste": true,
+	"eslint.format.enable": true,
+	"eslint.codeActionsOnSave.mode": "all",
+	"javascript.format.insertSpaceAfterConstructor": true,
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true,
+	"javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+	"javascript.format.insertSpaceBeforeFunctionParenthesis": true,
+	"typescript.preferences.includePackageJsonAutoImports": "on",
+	"typescript.preferences.importModuleSpecifierEnding": "minimal",
+	"typescript.updateImportsOnPaste.enabled": true,
+	"[markdown]": {
+		"editor.formatOnSave": false
+	}
+}
