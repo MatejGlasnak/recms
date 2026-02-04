@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/ui/field'
-import { Hash, Type, Columns } from 'lucide-react'
+import { Hash, Type as TypeIcon, Columns } from 'lucide-react'
 import type { ShowItem } from '../../../types'
 
 interface FieldItemEditorProps {
@@ -110,7 +110,7 @@ export function FieldItemEditor({
 						<Label htmlFor='type-select'>Display type</Label>
 						<InputGroup>
 							<InputGroupAddon align='inline-start'>
-								<Type className='h-4 w-4' />
+								<TypeIcon className='h-4 w-4' />
 							</InputGroupAddon>
 							<Select
 								value={type}
@@ -142,11 +142,6 @@ export function FieldItemEditor({
 								onChange={e => setLabel(e.target.value)}
 								placeholder='Leave empty to use field name'
 							/>
-							<InputGroupAddon align='inline-end'>
-								<InputGroupText>
-									<Type className='h-4 w-4' />
-								</InputGroupText>
-							</InputGroupAddon>
 						</InputGroup>
 					</div>
 

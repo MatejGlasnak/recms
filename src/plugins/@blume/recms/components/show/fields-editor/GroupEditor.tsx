@@ -19,7 +19,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/ui/field'
-import { Heading, FileText, Columns } from 'lucide-react'
+import { Columns } from 'lucide-react'
 import type { ShowGroup } from '../../../types'
 
 interface GroupEditorProps {
@@ -63,9 +63,6 @@ export function GroupEditor({ group, open, onOpenChange, onSave }: GroupEditorPr
 					<div className='grid gap-2'>
 						<Label htmlFor='group-label'>Group label</Label>
 						<InputGroup>
-							<InputGroupAddon align='inline-start'>
-								<Heading className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupInput
 								id='group-label'
 								value={label}
@@ -79,9 +76,6 @@ export function GroupEditor({ group, open, onOpenChange, onSave }: GroupEditorPr
 					<div className='grid gap-2'>
 						<Label htmlFor='group-description'>Description (optional)</Label>
 						<InputGroup>
-							<InputGroupAddon align='inline-start'>
-								<FileText className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupInput
 								id='group-description'
 								value={description}

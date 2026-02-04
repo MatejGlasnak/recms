@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/ui/field'
-import { Loader2, Plus, Trash2, GripVertical, Tag, FileText } from 'lucide-react'
+import { Loader2, Plus, Trash2, GripVertical } from 'lucide-react'
 import {
 	DndContext,
 	KeyboardSensor,
@@ -389,9 +389,6 @@ function EditTabModal({
 					<div className='grid gap-2'>
 						<Label htmlFor='tab-label'>Tab label</Label>
 						<InputGroup>
-							<InputGroupAddon align='inline-start'>
-								<Tag className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupInput
 								id='tab-label'
 								value={l}
@@ -420,9 +417,6 @@ function EditTabModal({
 					<div className='grid gap-2'>
 						<Label htmlFor='tab-description'>Description (optional)</Label>
 						<InputGroup>
-							<InputGroupAddon align='inline-start'>
-								<FileText className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupInput
 								id='tab-description'
 								value={d}

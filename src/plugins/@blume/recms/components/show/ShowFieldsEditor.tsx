@@ -25,17 +25,8 @@ import {
 	InputGroupTextarea
 } from '@/components/ui/input-group'
 import { Switch } from '@/components/ui/switch'
-import {
-	Loader2,
-	Plus,
-	Trash2,
-	GripVertical,
-	ChevronRight,
-	Heading,
-	FileText,
-	Type,
-	Hash
-} from 'lucide-react'
+import { Slider } from '@/components/ui/slider'
+import { Loader2, Plus, Trash2, GripVertical, ChevronRight, Columns } from 'lucide-react'
 import {
 	DndContext,
 	KeyboardSensor,
@@ -54,7 +45,7 @@ import {
 	verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { useUpdateShowConfig } from '../../hooks'
@@ -414,23 +405,6 @@ function GroupsSection({
 		})
 	}
 
-	const addColumn = (groupIndex: number) => {
-		const group = groups[groupIndex]
-		if (!group) return
-		const columnItems = getColumnItems(group)
-		columnItems.push([])
-		updateGroup(groupIndex, { ...group, columns: columnItems.length, columnItems })
-	}
-
-	const deleteColumn = (groupIndex: number, colIndex: number) => {
-		const group = groups[groupIndex]
-		if (!group) return
-		const columnItems = getColumnItems(group).filter((_, i) => i !== colIndex)
-		// Ensure at least 1 column
-		if (columnItems.length === 0) columnItems.push([])
-		updateGroup(groupIndex, { ...group, columns: columnItems.length, columnItems })
-	}
-
 	return (
 		<>
 			<div className='space-y-4'>
@@ -468,8 +442,6 @@ function GroupsSection({
 											onToggle={() => toggleGroup(i)}
 											onUpdate={updatedGroup => updateGroup(i, updatedGroup)}
 											onDelete={() => deleteGroup(i)}
-											onAddColumn={() => addColumn(i)}
-											onDeleteColumn={colIndex => deleteColumn(i, colIndex)}
 											fieldGroups={fieldGroups}
 											isLoadingFields={isLoadingFields}
 											onEditItem={item =>
@@ -484,7 +456,7 @@ function GroupsSection({
 				</div>
 			</div>
 
-			{/* Edit Item Dialog */}
+			{/* Edit/Add Item Dialog */}
 			{editingItem && (
 				<FieldItemEditor
 					item={editingItem.item}
@@ -496,12 +468,22 @@ function GroupsSection({
 						const { groupIndex, colIndex, itemIndex } = editingItem
 						const group = groups[groupIndex]
 						if (!group) return
-						const columnItems = getColumnItems(group).map((col, i) =>
-							i === colIndex
-								? col.map((it, j) => (j === itemIndex ? updatedItem : it))
-								: col
-						)
-						updateGroup(groupIndex, { ...group, columnItems })
+
+						// If itemIndex is -1, we're adding a new item
+						if (itemIndex === -1) {
+							const columnItems = getColumnItems(group).map((col, i) =>
+								i === colIndex ? [...col, updatedItem] : col
+							)
+							updateGroup(groupIndex, { ...group, columnItems })
+						} else {
+							// Otherwise, we're editing an existing item
+							const columnItems = getColumnItems(group).map((col, i) =>
+								i === colIndex
+									? col.map((it, j) => (j === itemIndex ? updatedItem : it))
+									: col
+							)
+							updateGroup(groupIndex, { ...group, columnItems })
+						}
 						setEditingItem(null)
 					}}
 				/>
@@ -518,8 +500,6 @@ interface SortableGroupRowProps {
 	onToggle: () => void
 	onUpdate: (group: ShowGroup) => void
 	onDelete: () => void
-	onAddColumn: () => void
-	onDeleteColumn: (colIndex: number) => void
 	fieldGroups: Array<{ value: string; items: Array<{ value: string; label: string }> }>
 	isLoadingFields: boolean
 	onEditItem: (item: { colIndex: number; itemIndex: number; item: ShowItem }) => void
@@ -532,8 +512,6 @@ function SortableGroupRow({
 	onToggle,
 	onUpdate,
 	onDelete,
-	onAddColumn,
-	onDeleteColumn,
 	fieldGroups,
 	isLoadingFields,
 	onEditItem
@@ -549,35 +527,6 @@ function SortableGroupRow({
 	const label = group.label ?? group.name ?? 'Unnamed group'
 	const hasLabel = !!(group.label ?? group.name)
 
-	const sensors = useSensors(
-		useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-		useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
-		useSensor(KeyboardSensor)
-	)
-
-	const handleItemsDragEnd = (event: DragEndEvent, colIndex: number) => {
-		const { active, over } = event
-		if (!over || active.id === over.id) return
-		const a = String(active.id)
-		const o = String(over.id)
-		if (!a.startsWith('item:') || !o.startsWith('item:')) return
-		const from = Number(a.split(':')[1])
-		const to = Number(o.split(':')[1])
-		if (Number.isNaN(from) || Number.isNaN(to)) return
-
-		const columnItems = getColumnItems(group).map((col, i) =>
-			i === colIndex ? arrayMove(col, from, to) : col
-		)
-		onUpdate({ ...group, columnItems })
-	}
-
-	const addItem = (colIndex: number, item: ShowItem) => {
-		const columnItems = getColumnItems(group).map((col, i) =>
-			i === colIndex ? [...col, item] : col
-		)
-		onUpdate({ ...group, columnItems })
-	}
-
 	const deleteItem = (colIndex: number, itemIndex: number) => {
 		const columnItems = getColumnItems(group).map((col, i) =>
 			i === colIndex ? col.filter((_, j) => j !== itemIndex) : col
@@ -591,7 +540,7 @@ function SortableGroupRow({
 	return (
 		<Card ref={setNodeRef} style={style} className={isDragging ? 'opacity-50' : ''}>
 			<CardHeader
-				className='cursor-pointer hover:bg-muted/50 transition-colors'
+				className='cursor-pointer hover:bg-muted/50 transition-colors p-3'
 				onClick={onToggle}
 			>
 				<div className='flex items-center gap-2'>
@@ -652,9 +601,6 @@ function SortableGroupRow({
 					<div className='space-y-2'>
 						<Label>Group name</Label>
 						<InputGroup>
-							<InputGroupAddon align='inline-start'>
-								<Heading className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupInput
 								value={group.label ?? ''}
 								onChange={e => onUpdate({ ...group, label: e.target.value })}
@@ -667,9 +613,6 @@ function SortableGroupRow({
 					<div className='space-y-2'>
 						<Label>Description</Label>
 						<InputGroup>
-							<InputGroupAddon align='block-start'>
-								<FileText className='h-4 w-4' />
-							</InputGroupAddon>
 							<InputGroupTextarea
 								value={group.description ?? ''}
 								onChange={e => onUpdate({ ...group, description: e.target.value })}
@@ -681,132 +624,179 @@ function SortableGroupRow({
 						</InputGroup>
 					</div>
 
-					<Field orientation='horizontal'>
-						<FieldContent>
-							<FieldLabel htmlFor={`showLabel-${index}`}>Show label</FieldLabel>
-							<FieldDescription>
-								Display the group name as a heading above the fields.
-							</FieldDescription>
-						</FieldContent>
-						<Switch
-							id={`showLabel-${index}`}
-							checked={group.showLabel ?? true}
-							onCheckedChange={checked =>
-								onUpdate({ ...group, showLabel: checked === true })
-							}
-						/>
-					</Field>
+					<div className='grid grid-cols-2 gap-4'>
+						<Field orientation='horizontal'>
+							<FieldContent>
+								<FieldLabel htmlFor={`showLabel-${index}`}>Show label</FieldLabel>
+								<FieldDescription>
+									Display the group name as a heading above the fields.
+								</FieldDescription>
+							</FieldContent>
+							<Switch
+								id={`showLabel-${index}`}
+								checked={group.showLabel ?? true}
+								onCheckedChange={checked =>
+									onUpdate({ ...group, showLabel: checked === true })
+								}
+							/>
+						</Field>
+
+						{/* Columns Slider */}
+						<Field>
+							<FieldContent>
+								<FieldLabel htmlFor={`columns-slider-${index}`}>
+									Number of columns
+								</FieldLabel>
+								<FieldDescription>
+									Organize fields into multiple columns (1-8)
+								</FieldDescription>
+							</FieldContent>
+							<div className='space-y-3'>
+								<div className='flex items-center gap-4'>
+									<Slider
+										id={`columns-slider-${index}`}
+										min={1}
+										max={8}
+										step={1}
+										value={[columnItems.length]}
+										onValueChange={([val]: number[]) => {
+											const currentItems = getColumnItems(group)
+											const newColumnItems = Array.from(
+												{ length: val },
+												(_, i) =>
+													currentItems[i] ? [...currentItems[i]] : []
+											)
+											onUpdate({
+												...group,
+												columns: val,
+												columnItems: newColumnItems
+											})
+										}}
+										className='flex-1'
+									/>
+									<InputGroup className='w-20'>
+										<InputGroupAddon align='inline-start'>
+											<Columns className='h-3.5 w-3.5' />
+										</InputGroupAddon>
+										<InputGroupInput
+											type='number'
+											min={1}
+											max={8}
+											value={columnItems.length}
+											onChange={e => {
+												const val = Math.min(
+													8,
+													Math.max(1, parseInt(e.target.value, 10) || 1)
+												)
+												const currentItems = getColumnItems(group)
+												const newColumnItems = Array.from(
+													{ length: val },
+													(_, i) =>
+														currentItems[i] ? [...currentItems[i]] : []
+												)
+												onUpdate({
+													...group,
+													columns: val,
+													columnItems: newColumnItems
+												})
+											}}
+											className='text-center'
+										/>
+									</InputGroup>
+								</div>
+							</div>
+						</Field>
+					</div>
 
 					<Separator />
 
 					{/* Columns Configuration */}
 					<div className='space-y-3'>
-						<Label>Columns and fields</Label>
-						<div
-							className='grid gap-4'
-							style={{
-								gridTemplateColumns: `repeat(${columnItems.length}, minmax(0, 1fr))`
-							}}
-						>
-							{columnItems.map((items, colIndex) => (
-								<Card key={colIndex} className='p-3'>
-									<CardHeader className='p-0 pb-2 flex flex-row items-center justify-between'>
-										<CardTitle className='text-sm'>
-											Column {colIndex + 1}
-										</CardTitle>
-										<div className='flex gap-1'>
-											<Button
-												type='button'
-												variant='ghost'
-												size='sm'
-												className='h-6 w-6 p-0'
-												onClick={() => onAddColumn()}
-												title='Add column to the right'
+						<Label>Fields layout</Label>
+						<div className='space-y-2'>
+							{/* Grid Preview */}
+							<div
+								className='grid gap-2 p-4 border rounded-lg bg-muted/20'
+								style={{
+									gridTemplateColumns: `repeat(${columnItems.length}, minmax(0, 1fr))`
+								}}
+							>
+								{/* Render all items in a single grid with proper colspan */}
+								{columnItems.flatMap((items, colIndex) =>
+									items.map((item, itemIndex) => {
+										const colspan = Math.min(
+											item.colspan || 1,
+											columnItems.length
+										)
+										return (
+											<div
+												key={`${colIndex}-${itemIndex}`}
+												style={{
+													gridColumn: `span ${colspan}`
+												}}
 											>
-												<Plus className='h-3.5 w-3.5' />
-											</Button>
-											{columnItems.length > 1 && (
-												<Button
-													type='button'
-													variant='ghost'
-													size='sm'
-													className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-													onClick={() => onDeleteColumn(colIndex)}
-													title='Delete this column'
-												>
-													<Trash2 className='h-3.5 w-3.5' />
-												</Button>
-											)}
-										</div>
-									</CardHeader>
-									<CardContent className='p-0 space-y-2'>
-										<DndContext
-											key={`items-${index}-${colIndex}`}
-											sensors={sensors}
-											collisionDetection={closestCenter}
-											onDragEnd={e => handleItemsDragEnd(e, colIndex)}
-											modifiers={[restrictToVerticalAxis]}
-										>
-											<SortableContext
-												strategy={verticalListSortingStrategy}
-												items={items.map((_, i) => `item:${i}`)}
-											>
-												{items.map((item, itemIndex) => (
-													<SortableItemRow
-														key={`${item.field}-${itemIndex}`}
-														item={item}
-														index={itemIndex}
-														fieldLabel={
-															fieldLabels.get(item.field) ??
-															item.field
-														}
-														onEdit={() =>
-															onEditItem({
-																colIndex,
-																itemIndex,
-																item: { ...item }
-															})
-														}
-														onDelete={() =>
-															deleteItem(colIndex, itemIndex)
-														}
-													/>
-												))}
-											</SortableContext>
-										</DndContext>
-										{items.length === 0 && (
-											<div className='rounded-md border border-dashed p-4 text-sm text-center'>
-												{isLoadingFields ? (
-													<p className='text-muted-foreground'>
-														Loading fields...
-													</p>
-												) : fieldGroups.length === 0 ? (
-													<>
-														<div className='space-y-1'>
-															<p className='font-medium text-foreground'>
-																No fields available
-															</p>
-															<p className='text-xs text-muted-foreground'>
-																Make sure your API endpoint is
-																configured and returns data.
-															</p>
-														</div>
-													</>
-												) : (
-													<p className='text-muted-foreground'>
-														No fields yet
-													</p>
-												)}
+												<ItemCard
+													item={item}
+													fieldLabel={
+														fieldLabels.get(item.field) ?? item.field
+													}
+													onEdit={() =>
+														onEditItem({
+															colIndex,
+															itemIndex,
+															item: { ...item }
+														})
+													}
+													onDelete={() => deleteItem(colIndex, itemIndex)}
+												/>
 											</div>
-										)}
-										<AddItemInline
-											fieldGroups={fieldGroups}
-											onAdd={item => addItem(colIndex, item)}
-											itemCount={items.length}
-										/>
-									</CardContent>
-								</Card>
-							))}
+										)
+									})
+								)}
+								{/* Add field buttons for each column */}
+								{columnItems.map((items, colIndex) => (
+									<div key={`add-${colIndex}`}>
+										<Button
+											type='button'
+											variant='outline'
+											size='sm'
+											className='w-full h-auto min-h-[60px] border-dashed'
+											onClick={() => {
+												onEditItem({
+													colIndex,
+													itemIndex: -1,
+													item: { field: '', type: 'text' }
+												})
+											}}
+										>
+											<Plus className='h-4 w-4 mr-1' />
+											Add field
+										</Button>
+									</div>
+								))}
+							</div>
+							{/* Empty state */}
+							{columnItems.every(col => col.length === 0) && (
+								<div className='rounded-md border border-dashed p-6 text-sm text-center'>
+									{isLoadingFields ? (
+										<p className='text-muted-foreground'>Loading fields...</p>
+									) : fieldGroups.length === 0 ? (
+										<div className='space-y-1'>
+											<p className='font-medium text-foreground'>
+												No fields available
+											</p>
+											<p className='text-xs text-muted-foreground'>
+												Make sure your API endpoint is configured and
+												returns data.
+											</p>
+										</div>
+									) : (
+										<p className='text-muted-foreground'>
+											No fields yet. Add fields using the buttons above.
+										</p>
+									)}
+								</div>
+							)}
 						</div>
 					</div>
 				</CardContent>
@@ -815,189 +805,35 @@ function SortableGroupRow({
 	)
 }
 
-// ---- Sortable Item Row ----
-interface SortableItemRowProps {
+// ---- Item Card (No Drag and Drop) ----
+interface ItemCardProps {
 	item: ShowItem
-	index: number
 	fieldLabel: string
 	onEdit: () => void
 	onDelete: () => void
 }
 
-function SortableItemRow({ item, index, fieldLabel, onEdit, onDelete }: SortableItemRowProps) {
-	const id = `item:${index}`
-	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-		id
-	})
-	const style = {
-		transform: CSS.Transform.toString(transform),
-		transition
-	}
+function ItemCard({ item, fieldLabel, onEdit, onDelete }: ItemCardProps) {
 	// Use item.label if available, otherwise use fieldLabel from field groups, otherwise use field name
 	const displayLabel = item.label || fieldLabel || item.field
 
 	return (
-		<div
-			ref={setNodeRef}
-			style={style}
-			className={`flex items-center gap-2 rounded-md border px-2 py-1.5 hover:bg-muted/50 transition-colors cursor-pointer ${
-				isDragging ? 'opacity-50' : ''
-			}`}
-			onClick={onEdit}
-		>
-			<button
-				type='button'
-				className='touch-none cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground flex-shrink-0'
-				{...attributes}
-				{...listeners}
-				aria-label='Drag to reorder'
-				onClick={e => e.stopPropagation()}
-			>
-				<GripVertical className='h-3.5 w-3.5' />
-			</button>
-			<div className='flex-1 min-w-0'>
-				<span className='text-sm font-medium text-muted-foreground truncate block'>
-					{displayLabel}
-				</span>
-			</div>
-			<Button
-				variant='ghost'
-				size='sm'
-				className='h-7 w-7 p-0 flex-shrink-0'
-				onClick={e => {
-					e.stopPropagation()
-					onDelete()
-				}}
-			>
-				<Trash2 className='h-3.5 w-3.5 text-destructive' />
-			</Button>
-		</div>
-	)
-}
-
-// ---- Add Item Inline ----
-interface AddItemInlineProps {
-	fieldGroups: Array<{ value: string; items: Array<{ value: string; label: string }> }>
-	onAdd: (item: ShowItem) => void
-	itemCount: number
-}
-
-function AddItemInline({ fieldGroups, onAdd, itemCount }: AddItemInlineProps) {
-	const [isAdding, setIsAdding] = useState(false)
-	const [field, setField] = useState('')
-	const [label, setLabel] = useState('')
-	const [type, setType] = useState<ShowItem['type']>('text')
-
-	// Auto-add when field is selected
-	const handleFieldChange = (value: string) => {
-		setField(value)
-		if (value && type) {
-			// Auto-add immediately
-			onAdd({ field: value, type, label: label || undefined })
-			setField('')
-			setLabel('')
-			setType('text')
-			setIsAdding(false)
-		}
-	}
-
-	if (!isAdding) {
-		return fieldGroups.length > 0 ? (
-			<Button
-				type='button'
-				variant='outline'
-				size='sm'
-				className='w-full mt-1'
-				onClick={() => setIsAdding(true)}
-			>
-				<Plus className='h-4 w-4 mr-1' />
-				Add field
-			</Button>
-		) : null
-	}
-
-	return (
-		<Card className='p-3 border-dashed space-y-3'>
-			<div className='flex items-center justify-between'>
-				<span className='text-xs font-medium text-muted-foreground'>
-					Field {itemCount + 1}
-				</span>
+		<Card className='p-3 hover:bg-muted/50 transition-colors cursor-pointer' onClick={onEdit}>
+			<div className='flex items-center gap-2'>
+				<div className='flex-1 min-w-0'>
+					<span className='text-sm font-medium truncate block'>{displayLabel}</span>
+				</div>
 				<Button
-					type='button'
 					variant='ghost'
 					size='sm'
-					className='h-6 w-6 p-0'
-					onClick={() => {
-						setIsAdding(false)
-						setField('')
-						setLabel('')
-						setType('text')
+					className='h-7 w-7 p-0 flex-shrink-0'
+					onClick={e => {
+						e.stopPropagation()
+						onDelete()
 					}}
 				>
 					<Trash2 className='h-3.5 w-3.5 text-destructive' />
 				</Button>
-			</div>
-
-			<div className='space-y-2'>
-				<div>
-					<Label className='text-xs mb-1.5'>Label (optional)</Label>
-					<InputGroup className='h-9'>
-						<InputGroupAddon align='inline-start'>
-							<Type className='h-3.5 w-3.5' />
-						</InputGroupAddon>
-						<InputGroupInput
-							placeholder='Custom label'
-							value={label}
-							onChange={e => setLabel(e.target.value)}
-							className='h-9'
-						/>
-					</InputGroup>
-				</div>
-
-				<div className='grid grid-cols-2 gap-2'>
-					<div>
-						<Label className='text-xs mb-1.5'>Field</Label>
-						<InputGroup className='h-9'>
-							<InputGroupAddon align='inline-start'>
-								<Hash className='h-3.5 w-3.5' />
-							</InputGroupAddon>
-							<Select value={field} onValueChange={handleFieldChange}>
-								<SelectTrigger className='h-9 border-0 shadow-none focus:ring-0'>
-									<SelectValue placeholder='Select field' />
-								</SelectTrigger>
-								<SelectContent>
-									{fieldGroups.map(group => (
-										<div key={group.value}>
-											<div className='px-2 py-1.5 text-xs font-semibold text-muted-foreground'>
-												{group.value}
-											</div>
-											{group.items.map(item => (
-												<SelectItem key={item.value} value={item.value}>
-													{item.label}
-												</SelectItem>
-											))}
-										</div>
-									))}
-								</SelectContent>
-							</Select>
-						</InputGroup>
-					</div>
-
-					<div>
-						<Label className='text-xs mb-1.5'>Type</Label>
-						<Select value={type} onValueChange={v => setType(v as ShowItem['type'])}>
-							<SelectTrigger className='h-9'>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='text'>Text</SelectItem>
-								<SelectItem value='number'>Number</SelectItem>
-								<SelectItem value='date'>Date</SelectItem>
-								<SelectItem value='richtext'>Rich Text</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-				</div>
 			</div>
 		</Card>
 	)

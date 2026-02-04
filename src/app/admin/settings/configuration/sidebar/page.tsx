@@ -24,7 +24,7 @@ export default function SidebarConfigPage() {
 	const hasSyncedRef = useRef(false)
 	
 	// Initialize local config from fetched data once
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	 
 	useEffect(() => {
 		if (fetchedConfig && !hasSyncedRef.current) {
 			hasSyncedRef.current = true
