@@ -1,12 +1,7 @@
 'use client'
 
 import { Input } from '@/components/ui/input'
-import {
-	Field,
-	FieldLabel,
-	FieldDescription,
-	FieldError
-} from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import type { FieldComponentProps } from '../../../registry/FieldRegistry'
 
 export function TextField({
@@ -22,7 +17,7 @@ export function TextField({
 			{field.label && (
 				<FieldLabel htmlFor={field.name}>
 					{field.label}
-					{field.required && <span className='text-destructive ml-1'>*</span>}
+					{field.required && <span className='ml-1 text-destructive'>*</span>}
 				</FieldLabel>
 			)}
 			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}

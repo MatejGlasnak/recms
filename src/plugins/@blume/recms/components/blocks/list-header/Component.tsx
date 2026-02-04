@@ -41,19 +41,19 @@ export function ListHeader({
 	return (
 		<>
 			<div
-				className={`flex items-center justify-between mb-6 ${
+				className={`flex items-center justify-between ${
 					editMode
-						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer'
+						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary'
 						: ''
 				}`}
 				onClick={editMode ? () => setShowSettings(true) : undefined}
 			>
-				<div>
+				<div className='flex flex-col gap-2'>
 					{config.title && (
 						<h1 className='text-3xl font-bold tracking-tight'>{config.title}</h1>
 					)}
 					{config.description && (
-						<p className='text-muted-foreground mt-2'>{config.description}</p>
+						<p className='text-sm text-muted-foreground'>{config.description}</p>
 					)}
 				</div>
 				{editMode !== undefined && config.onEditModeToggle && (
@@ -67,12 +67,12 @@ export function ListHeader({
 					>
 						{editMode ? (
 							<>
-								<Check className='mr-2 h-4 w-4' />
+								<Check className='mr-2 size-4' />
 								Done
 							</>
 						) : (
 							<>
-								<Pencil className='mr-2 h-4 w-4' />
+								<Pencil className='mr-2 size-4' />
 								Edit
 							</>
 						)}

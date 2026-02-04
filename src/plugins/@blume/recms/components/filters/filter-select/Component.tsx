@@ -44,8 +44,8 @@ export function FilterSelect({
 	}
 
 	return (
-		<div className='flex flex-col gap-1.5'>
-			<Label htmlFor={id} className='text-xs text-muted-foreground'>
+		<div className='flex flex-col gap-2'>
+			<Label htmlFor={id} className='text-sm text-muted-foreground'>
 				{label}
 			</Label>
 			<Select
@@ -53,7 +53,7 @@ export function FilterSelect({
 				onValueChange={handleChange}
 				disabled={editMode}
 			>
-				<SelectTrigger id={id} className='h-10 w-full'>
+				<SelectTrigger id={id} className='w-full'>
 					<SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
 				</SelectTrigger>
 				<SelectContent>

@@ -26,7 +26,7 @@ export function InlineError({ message, error, className }: InlineErrorProps) {
 
 	return (
 		<Alert variant='destructive' className={className}>
-			<AlertDescription>{errorMessage}</AlertDescription>
+			<AlertDescription className='text-sm'>{errorMessage}</AlertDescription>
 		</Alert>
 	)
 }

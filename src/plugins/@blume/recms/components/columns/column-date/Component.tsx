@@ -9,7 +9,8 @@ export interface ColumnDateProps {
 }
 
 export function ColumnDate({ value, format: formatType }: ColumnDateProps) {
-	if (value === null || value === undefined) return <>-</>
+	if (value === null || value === undefined)
+		return <span className='text-muted-foreground'>-</span>
 
 	try {
 		let date: Date | null = null

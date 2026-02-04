@@ -36,7 +36,7 @@ export function FormField({
 	if (!fieldDefinition) {
 		console.warn(`Field type "${field.type}" not registered`)
 		return (
-			<div className='space-y-2'>
+			<div className='space-y-2' data-slot='field' data-orientation='vertical'>
 				<p className='text-sm text-destructive'>Unknown field type: {field.type}</p>
 			</div>
 		)
@@ -78,7 +78,12 @@ export function FormField({
 	const containerClass = cn(getSpanClass(), field.cssClass, field.stretch && 'h-full')
 
 	return (
-		<div className={containerClass} {...field.containerAttributes}>
+		<div
+			className={containerClass}
+			data-slot='field'
+			data-orientation='vertical'
+			{...field.containerAttributes}
+		>
 			<FieldComponent
 				field={field}
 				value={value}

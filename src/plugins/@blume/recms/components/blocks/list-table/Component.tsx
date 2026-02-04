@@ -208,8 +208,8 @@ export function ListTable({
 
 	if (columns.length === 0 && !editMode) {
 		return (
-			<div className='text-center py-12 text-muted-foreground'>
-				<p>No columns configured</p>
+			<div className='py-12 text-center text-muted-foreground'>
+				<p className='text-sm'>No columns configured</p>
 			</div>
 		)
 	}
@@ -221,7 +221,7 @@ export function ListTable({
 			<div
 				className={`relative ${
 					editMode
-						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer'
+						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary'
 						: ''
 				}`}
 				onClick={editMode ? () => setShowSettings(true) : undefined}
@@ -230,6 +230,7 @@ export function ListTable({
 					className={`overflow-hidden rounded-md border ${
 						showSampleData ? 'opacity-50' : ''
 					}`}
+					data-slot='table-container'
 				>
 					<Table>
 						<TableHeader>
@@ -283,7 +284,7 @@ export function ListTable({
 								<TableRow>
 									<TableCell
 										colSpan={columns.length}
-										className='h-24 text-center text-muted-foreground'
+										className='h-24 text-center text-sm text-muted-foreground'
 									>
 										No results found.
 									</TableCell>

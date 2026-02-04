@@ -12,9 +12,13 @@ const config: Config = {
 	theme: {
 		extend: {
 			borderRadius: {
-				lg: 'var(--radius)',
+				sm: 'calc(var(--radius) - 4px)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				lg: 'var(--radius)',
+				xl: 'calc(var(--radius) + 4px)',
+				'2xl': 'calc(var(--radius) + 8px)',
+				'3xl': 'calc(var(--radius) + 12px)',
+				'4xl': 'calc(var(--radius) + 16px)'
 			},
 			colors: {
 				background: 'hsl(var(--background))',

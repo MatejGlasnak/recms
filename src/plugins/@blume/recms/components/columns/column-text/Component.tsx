@@ -5,6 +5,7 @@ export interface ColumnTextProps {
 }
 
 export function ColumnText({ value }: ColumnTextProps) {
-	if (value === null || value === undefined) return <>-</>
+	if (value === null || value === undefined)
+		return <span className='text-muted-foreground'>-</span>
 	return <>{String(value)}</>
 }

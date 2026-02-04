@@ -160,7 +160,7 @@ export function FormModal({
 		if (field.type === 'group' && field.fields) {
 			const columns = field.columns ?? 6
 			return (
-				<div key={field.name} className='space-y-3'>
+				<div key={field.name} className='space-y-4'>
 					{field.label && (
 						<h3 className='text-sm font-semibold text-muted-foreground'>
 							{field.label}
@@ -187,7 +187,7 @@ export function FormModal({
 						field={field}
 					/>
 					{errors[field.name] && (
-						<p className='text-sm text-destructive mt-1'>{errors[field.name]}</p>
+						<p className='mt-1 text-sm text-destructive'>{errors[field.name]}</p>
 					)}
 				</div>
 			)
@@ -247,19 +247,17 @@ export function FormModal({
 					)}
 				</div>
 
-				<DialogFooter className='!justify-between'>
-					<div className='flex gap-2'>
-						{onDelete && (
-							<Button
-								variant='destructive'
-								onClick={handleDelete}
-								disabled={isSubmitting || isDeleting}
-							>
-								{isDeleting ? 'Deleting...' : deleteLabel}
-							</Button>
-						)}
-					</div>
-					<div className='flex gap-2'>
+				<DialogFooter className='flex-row !justify-between gap-2'>
+					{onDelete && (
+						<Button
+							variant='destructive'
+							onClick={handleDelete}
+							disabled={isSubmitting || isDeleting}
+						>
+							{isDeleting ? 'Deleting...' : deleteLabel}
+						</Button>
+					)}
+					<div className='ml-auto flex gap-2'>
 						<Button
 							variant='outline'
 							onClick={() => onOpenChange(false)}

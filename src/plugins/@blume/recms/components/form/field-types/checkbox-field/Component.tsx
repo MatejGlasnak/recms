@@ -35,7 +35,7 @@ export function CheckboxField({
 				{field.label && (
 					<FieldLabel htmlFor={field.name}>
 						{field.label}
-						{field.required && <span className='text-destructive ml-1'>*</span>}
+						{field.required && <span className='ml-1 text-destructive'>*</span>}
 					</FieldLabel>
 				)}
 				{(field.commentAbove || field.comment) && (

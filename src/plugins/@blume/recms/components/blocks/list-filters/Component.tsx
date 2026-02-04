@@ -90,9 +90,9 @@ export function ListFilters({
 	return (
 		<>
 			<div
-				className={`space-y-4 mb-6 ${
+				className={`space-y-4 !my-6 ${
 					editMode
-						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer [&:has(>*:hover)]:border-primary/40'
+						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary [&:has(>*:hover)]:border-primary/40'
 						: ''
 				}`}
 				onClick={e => {
@@ -110,7 +110,7 @@ export function ListFilters({
 						<div className='flex-1'>
 							{title && <h3 className='text-lg font-semibold'>{title}</h3>}
 							{description && (
-								<p className='text-sm text-muted-foreground mt-1'>{description}</p>
+								<p className='mt-1 text-sm text-muted-foreground'>{description}</p>
 							)}
 						</div>
 					</div>
@@ -144,9 +144,9 @@ export function ListFilters({
 								e.stopPropagation()
 								handleClearFilters()
 							}}
-							className='shrink-0 mt-2'
+							className='mt-2 shrink-0'
 						>
-							<X className='mr-2 h-4 w-4' />
+							<X className='mr-2 size-4' />
 							Clear
 						</Button>
 					)}

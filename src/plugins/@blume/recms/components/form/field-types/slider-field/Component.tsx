@@ -24,7 +24,7 @@ export function SliderField({
 			{field.label && (
 				<FieldLabel htmlFor={field.name}>
 					{field.label}
-					{field.required && <span className='text-destructive ml-1'>*</span>}
+					{field.required && <span className='ml-1 text-destructive'>*</span>}
 				</FieldLabel>
 			)}
 			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}
@@ -42,7 +42,7 @@ export function SliderField({
 				/>
 				<InputGroup className='w-20'>
 					<InputGroupAddon align='inline-start'>
-						<Columns className='h-3.5 w-3.5' />
+						<Columns className='size-3.5' />
 					</InputGroupAddon>
 					<InputGroupInput
 						type='number'

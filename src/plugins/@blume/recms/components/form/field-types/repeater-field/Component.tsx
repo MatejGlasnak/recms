@@ -93,7 +93,7 @@ export function RepeaterField({
 				{field.label && (
 					<FieldLabel>
 						{field.label}
-						{field.required && <span className='text-destructive ml-1'>*</span>}
+						{field.required && <span className='ml-1 text-destructive'>*</span>}
 					</FieldLabel>
 				)}
 				<FieldError>Repeater field requires a form configuration</FieldError>
@@ -106,14 +106,14 @@ export function RepeaterField({
 			{field.label && (
 				<FieldLabel>
 					{field.label}
-					{field.required && <span className='text-destructive ml-1'>*</span>}
+					{field.required && <span className='ml-1 text-destructive'>*</span>}
 				</FieldLabel>
 			)}
 			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}
 
 			<div className='space-y-4'>
 				{items.length === 0 ? (
-					<div className='text-center py-8 text-muted-foreground'>
+					<div className='py-8 text-center text-muted-foreground'>
 						{field.placeholder ||
 							`No ${
 								field.label?.toLowerCase() || 'items'
@@ -132,7 +132,7 @@ export function RepeaterField({
 											className='cursor-move'
 											disabled={disabled || readOnly || items.length === 1}
 										>
-											<GripVertical className='h-4 w-4' />
+											<GripVertical className='size-4' />
 										</Button>
 
 										<Button
@@ -143,13 +143,13 @@ export function RepeaterField({
 											disabled={disabled || readOnly}
 										>
 											<ChevronRight
-												className={`h-4 w-4 transition-transform ${
+												className={`size-4 transition-transform ${
 													expandedItems.has(index) ? 'rotate-90' : ''
 												}`}
 											/>
 										</Button>
 
-										<div className='flex-1 min-w-0 text-sm font-medium'>
+										<div className='min-w-0 flex-1 text-sm font-medium'>
 											{getItemLabel(item, index)}
 										</div>
 
@@ -162,7 +162,7 @@ export function RepeaterField({
 													onClick={() => moveItem(index, index - 1)}
 													disabled={disabled || readOnly}
 												>
-													<ChevronUp className='h-4 w-4' />
+													<ChevronUp className='size-4' />
 												</Button>
 											)}
 											{index < items.length - 1 && (
@@ -173,7 +173,7 @@ export function RepeaterField({
 													onClick={() => moveItem(index, index + 1)}
 													disabled={disabled || readOnly}
 												>
-													<ChevronDown className='h-4 w-4' />
+													<ChevronDown className='size-4' />
 												</Button>
 											)}
 											<Button
@@ -184,7 +184,7 @@ export function RepeaterField({
 												onClick={() => removeItem(index)}
 												disabled={disabled || readOnly}
 											>
-												<Trash2 className='h-4 w-4' />
+												<Trash2 className='size-4' />
 											</Button>
 										</div>
 									</div>
@@ -225,7 +225,7 @@ export function RepeaterField({
 						(field.maxItems !== undefined && items.length >= field.maxItems)
 					}
 				>
-					<Plus className='h-4 w-4 mr-2' />
+					<Plus className='mr-2 size-4' />
 					Add {field.label || 'Item'}
 				</Button>
 			</div>

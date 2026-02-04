@@ -34,14 +34,14 @@ export function FilterCheckbox({
 	}
 
 	return (
-		<div className='flex items-center gap-2 h-10 w-full'>
+		<div className='flex h-10 w-full items-center gap-2'>
 			<Checkbox
 				id={id}
 				checked={Boolean(currentValue)}
 				onCheckedChange={checked => handleChange(!!checked)}
 				disabled={editMode}
 			/>
-			<Label htmlFor={id} className='cursor-pointer'>
+			<Label htmlFor={id} className='cursor-pointer text-sm'>
 				{label}
 			</Label>
 		</div>

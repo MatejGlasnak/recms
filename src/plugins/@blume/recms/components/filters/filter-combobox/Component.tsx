@@ -43,8 +43,8 @@ function ComboboxFilterMultiple({
 }) {
 	const selectedValues = Array.isArray(value) ? value : []
 	return (
-		<div className='flex flex-col gap-1.5 w-full'>
-			<Label htmlFor={id} className='text-xs text-muted-foreground'>
+		<div className='flex w-full flex-col gap-2'>
+			<Label htmlFor={id} className='text-sm text-muted-foreground'>
 				{label}
 			</Label>
 			<Combobox
@@ -56,7 +56,7 @@ function ComboboxFilterMultiple({
 				multiple
 				items={options}
 			>
-				<ComboboxChips className='w-[240px] min-h-10'>
+				<ComboboxChips className='min-h-10 w-full'>
 					<ComboboxChipsInput
 						placeholder={placeholder || `Select ${label.toLowerCase()}...`}
 						disabled={disabled}
@@ -95,8 +95,8 @@ function ComboboxFilterSingle({
 	disabled?: boolean
 }) {
 	return (
-		<div className='flex flex-col gap-1.5'>
-			<Label htmlFor={id} className='text-xs text-muted-foreground'>
+		<div className='flex flex-col gap-2'>
+			<Label htmlFor={id} className='text-sm text-muted-foreground'>
 				{label}
 			</Label>
 			<Combobox
@@ -108,7 +108,7 @@ function ComboboxFilterSingle({
 				<ComboboxInput
 					placeholder={placeholder || `Select ${label.toLowerCase()}...`}
 					showClear
-					className='w-[240px]'
+					className='w-full'
 					disabled={disabled}
 				/>
 				<ComboboxContent>

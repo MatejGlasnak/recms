@@ -35,7 +35,9 @@ export function BlockRenderer({
 		console.warn(`Block type "${block.slug}" not registered`)
 		return (
 			<Alert variant='destructive'>
-				<AlertDescription>Unknown block type: {block.slug}</AlertDescription>
+				<AlertDescription className='text-sm'>
+					Unknown block type: {block.slug}
+				</AlertDescription>
 			</Alert>
 		)
 	}

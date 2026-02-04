@@ -30,18 +30,15 @@ export function PageError({ message, title, error, className, alertClassName }: 
 		message ?? (error instanceof Error ? error.message : null) ?? 'An unexpected error occurred'
 
 	return (
-		<div
-			className={className || 'container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8'}
-			style={{ paddingTop: '24px' }}
-		>
+		<div className={className || 'container mx-auto w-full px-4 py-6 sm:px-6 lg:px-8'}>
 			<Alert variant='destructive' className={alertClassName}>
 				{title && (
-					<div className='flex items-center gap-2 mb-1'>
-						<AlertCircle className='h-4 w-4' />
+					<div className='mb-1 flex items-center gap-2'>
+						<AlertCircle className='size-4' />
 						<AlertTitle>{title}</AlertTitle>
 					</div>
 				)}
-				<AlertDescription>{errorMessage}</AlertDescription>
+				<AlertDescription className='text-sm'>{errorMessage}</AlertDescription>
 			</Alert>
 		</div>
 	)

@@ -237,10 +237,7 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 	}
 
 	return (
-		<div
-			className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8'
-			style={{ paddingTop: '24px' }}
-		>
+		<div className='container mx-auto flex w-full flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
 			{pageConfig.blocks
 				.filter(block => block.visible !== false)
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))

@@ -84,19 +84,19 @@ export function ListPagination({
 	return (
 		<>
 			<div
-				className={`relative flex items-center justify-between mt-6 ${
+				className={`relative flex items-center justify-between gap-4 ${
 					editMode
-						? 'border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer p-3'
+						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary'
 						: ''
 				}`}
 				onClick={editMode ? () => setShowSettings(true) : undefined}
 			>
-				<span className='text-sm text-muted-foreground whitespace-nowrap'>
+				<span className='whitespace-nowrap text-sm text-muted-foreground'>
 					Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to{' '}
 					{Math.min(currentPage * pageSize, total)} of {total} results
 				</span>
 
-				<div className='flex items-center justify-between gap-12'>
+				<div className='flex items-center gap-6'>
 					<Pagination>
 						<PaginationContent>
 							<PaginationItem>
@@ -153,7 +153,10 @@ export function ListPagination({
 						</PaginationContent>
 					</Pagination>
 
-					<Field orientation='horizontal' className='w-fit'>
+					<Field orientation='horizontal' className='w-fit items-center gap-2'>
+						<FieldLabel htmlFor='select-rows-per-page' className='text-sm'>
+							Rows
+						</FieldLabel>
 						<Select
 							value={String(pageSize)}
 							onValueChange={value => handlePageSizeChange(Number(value))}

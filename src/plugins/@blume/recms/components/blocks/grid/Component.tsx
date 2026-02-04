@@ -75,7 +75,7 @@ function SortableBlock({ block, editMode, onClick, children }: SortableBlockProp
 		<div
 			ref={setNodeRef}
 			style={style}
-			className='relative border border-dashed border-primary/40 rounded p-2 hover:border-primary hover:border-solid transition-colors cursor-move'
+			className='relative cursor-move rounded border border-dashed border-primary/40 p-2 transition-colors hover:border-solid hover:border-primary'
 			{...attributes}
 			{...listeners}
 		>
@@ -238,7 +238,7 @@ export function Grid({
 			<div
 				className={`grid gap-4 ${
 					editMode
-						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer [&:has(>*:hover)]:border-primary/40'
+						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary [&:has(>*:hover)]:border-primary/40'
 						: ''
 				}`}
 				style={{
@@ -338,11 +338,11 @@ export function Grid({
 
 				{editMode && (
 					<div
-						className='group border border-dashed border-muted-foreground/30 opacity-50 rounded h-full w-full flex items-center justify-center cursor-pointer hover:opacity-100 hover:border-primary hover:border-solid transition-opacity'
+						className='group flex h-full w-full cursor-pointer items-center justify-center rounded border border-dashed border-muted-foreground/30 opacity-50 transition-opacity hover:border-solid hover:border-primary hover:opacity-100'
 						onClick={() => setShowAddModal(true)}
 						style={{ gridColumn: `span ${Math.min(1, columnsDesktop)}` }}
 					>
-						<Plus className='h-8 w-8 text-muted-foreground font-extralight group-hover:text-primary transition-colors' />
+						<Plus className='size-8 font-extralight text-muted-foreground transition-colors group-hover:text-primary' />
 					</div>
 				)}
 			</div>
