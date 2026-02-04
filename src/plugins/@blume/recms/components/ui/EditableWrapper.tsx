@@ -34,7 +34,7 @@ export function EditableWrapper({
 			role={onEditClick ? 'button' : undefined}
 			tabIndex={onEditClick ? 0 : undefined}
 		>
-			<div className={editMode ? 'pointer-events-none' : ''}>{children}</div>
+			<div>{children}</div>
 		</div>
 	)
 }

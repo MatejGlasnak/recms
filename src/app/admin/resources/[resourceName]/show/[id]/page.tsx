@@ -1,1 +1,1 @@
-export { ShowPage as default } from '@blume/recms'
+export { ShowPageNew as default } from '@blume/recms'

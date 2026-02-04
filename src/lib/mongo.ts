@@ -70,8 +70,14 @@ export async function getAppResourcesListsCollection(): Promise<Collection> {
 	return db.collection('app_resources_lists')
 }
 
-// Helper to get app resources show config collection (for storing show page configurations)
+// Helper to get app resources show config collection (for storing show page configurations - legacy)
 export async function getAppResourcesShowCollection(): Promise<Collection> {
 	const db = await getDatabase()
 	return db.collection('app_resources_show')
+}
+
+// Helper to get app resources show pages collection (for storing block-based show page configurations)
+export async function getAppResourcesShowPagesCollection(): Promise<Collection> {
+	const db = await getDatabase()
+	return db.collection('app_resources_show_pages')
 }

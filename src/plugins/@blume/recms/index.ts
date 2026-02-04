@@ -99,11 +99,16 @@ export {
 	ListTable,
 	listTableConfig,
 	ListPagination,
-	listPaginationConfig
+	listPaginationConfig,
+	ShowHeader,
+	showHeaderConfig,
+	ShowContent,
+	showContentConfig
 } from './components/blocks'
 
 // Pages (new block-based)
 export { ListPage } from './components/pages/list'
+export { ShowPageNew } from './pages/resources/ShowPageNew'
 
 // Legacy pages (for backward compatibility)
 export { ShowPage } from './pages/resources/ShowPage'

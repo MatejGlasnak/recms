@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAppResourcesListsCollection } from '@/lib/mongo'
+import { getAppResourcesListsCollection, getAppResourcesShowPagesCollection } from '@/lib/mongo'
 
 const blockConfigSchema = z.object({
 	id: z.string(),
@@ -18,60 +18,104 @@ const pageConfigSchema = z.object({
 // GET - Fetch page configuration for a specific resource
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: Promise<{ resourceId: string }> }
+	{ params }: { params: Promise<{ resourceId: string[] }> }
 ) {
 	try {
-		const { resourceId } = await params
-		const collection = await getAppResourcesListsCollection()
-		const config = await collection.findOne({ resourceId })
+		const { resourceId: resourceIdArray } = await params
+
+		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
+		const resourceId = resourceIdArray.join('/')
+
+		// Check if this is a show page (resourceId ends with /show)
+		const isShowPage = resourceId.endsWith('/show')
+		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
+
+		const collection = isShowPage
+			? await getAppResourcesShowPagesCollection()
+			: await getAppResourcesListsCollection()
+
+		const config = await collection.findOne({ resourceId: actualResourceId })
 
 		if (!config) {
 			// Return default block-based config
-			return NextResponse.json({
-				id: null,
-				resourceId,
-				blocks: [
-					{
-						id: 'header-1',
-						slug: 'list-header',
-						config: {
-							title: '',
-							description: '',
-							showEditButton: true
+			if (isShowPage) {
+				return NextResponse.json({
+					id: null,
+					resourceId: actualResourceId,
+					blocks: [
+						{
+							id: 'header-1',
+							slug: 'show-header',
+							config: {
+								title: '',
+								description: '',
+								showEdit: true,
+								showDelete: false,
+								showBack: true
+							},
+							order: 0
+						},
+						{
+							id: 'content-1',
+							slug: 'show-content',
+							config: {
+								columns: '2',
+								fields: [],
+								showCard: true,
+								cardTitle: '',
+								cardDescription: ''
+							},
+							order: 1
 						}
-					},
-					{
-						id: 'filters-1',
-						slug: 'list-filters',
-						config: {
-							filters: []
+					]
+				})
+			} else {
+				return NextResponse.json({
+					id: null,
+					resourceId,
+					blocks: [
+						{
+							id: 'header-1',
+							slug: 'list-header',
+							config: {
+								title: '',
+								description: '',
+								showEditButton: true
+							}
+						},
+						{
+							id: 'filters-1',
+							slug: 'list-filters',
+							config: {
+								filters: []
+							}
+						},
+						{
+							id: 'table-1',
+							slug: 'list-table',
+							config: {
+								columns: [],
+								rowClickAction: 'none'
+							}
+						},
+						{
+							id: 'pagination-1',
+							slug: 'list-pagination',
+							config: {
+								pageSize: 10,
+								pageSizeOptions: [10, 25, 50, 100]
+							}
 						}
-					},
-					{
-						id: 'table-1',
-						slug: 'list-table',
-						config: {
-							columns: [],
-							rowClickAction: 'none'
-						}
-					},
-					{
-						id: 'pagination-1',
-						slug: 'list-pagination',
-						config: {
-							pageSize: 10,
-							pageSizeOptions: [10, 25, 50, 100]
-						}
-					}
-				]
-			})
+					]
+				})
+			}
 		}
 
 		// Check if config has new block structure
 		if (config.blocks) {
 			return NextResponse.json({
 				id: config._id,
-				resourceId: config.resourceId,
+				resourceId: actualResourceId,
 				blocks: config.blocks
 			})
 		}
@@ -137,11 +181,18 @@ export async function GET(
 // PATCH - Update page configuration for a specific resource
 export async function PATCH(
 	request: NextRequest,
-	{ params }: { params: Promise<{ resourceId: string }> }
+	{ params }: { params: Promise<{ resourceId: string[] }> }
 ) {
 	try {
-		const { resourceId } = await params
+		const { resourceId: resourceIdArray } = await params
 		const body = await request.json()
+
+		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
+		const resourceId = resourceIdArray.join('/')
+
+		// Check if this is a show page (resourceId ends with /show)
+		const isShowPage = resourceId.endsWith('/show')
+		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
 
 		// Validate input
 		const validation = pageConfigSchema.safeParse(body)
@@ -150,15 +201,17 @@ export async function PATCH(
 		}
 
 		const configData = validation.data
-		const collection = await getAppResourcesListsCollection()
+		const collection = isShowPage
+			? await getAppResourcesShowPagesCollection()
+			: await getAppResourcesListsCollection()
 
 		// Check if config exists
-		const existingConfig = await collection.findOne({ resourceId })
+		const existingConfig = await collection.findOne({ resourceId: actualResourceId })
 
 		if (existingConfig) {
 			// Update existing config
 			await collection.updateOne(
-				{ resourceId },
+				{ resourceId: actualResourceId },
 				{
 					$set: {
 						blocks: configData.blocks,
@@ -169,7 +222,7 @@ export async function PATCH(
 
 			return NextResponse.json({
 				id: existingConfig._id,
-				resourceId,
+				resourceId: actualResourceId,
 				blocks: configData.blocks
 			})
 		} else {
@@ -178,7 +231,7 @@ export async function PATCH(
 			const now = new Date()
 			await collection.insertOne({
 				_id: id,
-				resourceId,
+				resourceId: actualResourceId,
 				blocks: configData.blocks,
 				createdAt: now,
 				updatedAt: now
@@ -187,7 +240,7 @@ export async function PATCH(
 			return NextResponse.json(
 				{
 					id,
-					resourceId,
+					resourceId: actualResourceId,
 					blocks: configData.blocks
 				},
 				{ status: 201 }
@@ -202,13 +255,23 @@ export async function PATCH(
 // DELETE - Delete page configuration for a specific resource
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: Promise<{ resourceId: string }> }
+	{ params }: { params: Promise<{ resourceId: string[] }> }
 ) {
 	try {
-		const { resourceId } = await params
-		const collection = await getAppResourcesListsCollection()
+		const { resourceId: resourceIdArray } = await params
 
-		const result = await collection.deleteOne({ resourceId })
+		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
+		const resourceId = resourceIdArray.join('/')
+
+		// Check if this is a show page (resourceId ends with /show)
+		const isShowPage = resourceId.endsWith('/show')
+		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
+
+		const collection = isShowPage
+			? await getAppResourcesShowPagesCollection()
+			: await getAppResourcesListsCollection()
+
+		const result = await collection.deleteOne({ resourceId: actualResourceId })
 
 		if (result.deletedCount === 0) {
 			return NextResponse.json({ error: 'Config not found' }, { status: 404 })
