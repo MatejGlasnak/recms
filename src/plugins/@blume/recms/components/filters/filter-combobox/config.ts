@@ -6,6 +6,7 @@ export const filterComboboxConfig: BlockFieldConfig = {
 			name: 'label',
 			type: 'text',
 			label: 'Label',
+			placeholder: 'e.g., Tags, Categories',
 			required: true,
 			span: 'full'
 		},
@@ -13,6 +14,7 @@ export const filterComboboxConfig: BlockFieldConfig = {
 			name: 'field',
 			type: 'text',
 			label: 'Field Name',
+			placeholder: 'e.g., tags, categories',
 			required: true,
 			comment: 'The database field to filter on',
 			span: 'full'
@@ -21,27 +23,44 @@ export const filterComboboxConfig: BlockFieldConfig = {
 			name: 'placeholder',
 			type: 'text',
 			label: 'Placeholder',
+			placeholder: 'e.g., Select tags...',
+			comment: 'Optional placeholder text',
 			span: 'full'
 		},
 		{
 			name: 'multiple',
 			type: 'checkbox',
-			label: 'Allow Multiple Selection',
+			label: 'Allow Multiple Selections',
 			default: false,
 			span: 'full'
 		},
 		{
-			name: 'operator',
-			type: 'dropdown',
-			label: 'Operator',
-			default: 'eq',
-			options: [
-				{ label: 'Equals', value: 'eq' },
-				{ label: 'Not Equals', value: 'ne' },
-				{ label: 'In', value: 'in' },
-				{ label: 'Not In', value: 'nin' }
-			],
-			span: 'full'
+			name: 'options',
+			type: 'repeater',
+			label: 'Options',
+			comment: 'Available options for the combobox',
+			span: 'full',
+			default: [],
+			form: {
+				fields: [
+					{
+						name: 'label',
+						type: 'text',
+						label: 'Label',
+						placeholder: 'Display text',
+						required: true,
+						span: 'left'
+					},
+					{
+						name: 'value',
+						type: 'text',
+						label: 'Value',
+						placeholder: 'Actual value',
+						required: true,
+						span: 'right'
+					}
+				]
+			}
 		}
 	]
 }

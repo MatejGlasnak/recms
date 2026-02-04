@@ -1,5 +1,6 @@
 'use client'
 
+import { Label } from '@/components/ui/label'
 import {
 	Combobox,
 	ComboboxInput,
@@ -10,20 +11,18 @@ import {
 	ComboboxChips,
 	ComboboxChipsInput
 } from '@/components/ui/combobox'
-import { Label } from '@/components/ui/label'
+import type { BlockComponentProps } from '../../registry/BlockRegistry'
 
-export interface FilterComboboxProps {
-	id: string
-	label: string
-	value: string | string[]
-	onChange: (value: string | string[]) => void
+interface FilterComboboxConfig {
+	label?: string
+	field?: string
 	placeholder?: string
 	options?: { label: string; value: string }[]
 	multiple?: boolean
-	disabled?: boolean
 }
 
-function FilterComboboxMultiple({
+// Combobox Filter Components
+function ComboboxFilterMultiple({
 	id,
 	label,
 	value,
@@ -31,10 +30,18 @@ function FilterComboboxMultiple({
 	placeholder,
 	options = [],
 	disabled = false
-}: FilterComboboxProps & { value: string[] }) {
+}: {
+	id: string
+	label: string
+	value: string[]
+	onChange: (value: string | string[]) => void
+	placeholder?: string
+	options?: { label: string; value: string }[]
+	disabled?: boolean
+}) {
 	const selectedValues = Array.isArray(value) ? value : []
 	return (
-		<div className='flex flex-col gap-1.5'>
+		<div className='flex flex-col gap-1.5 w-full'>
 			<Label htmlFor={id} className='text-xs text-muted-foreground'>
 				{label}
 			</Label>
@@ -68,7 +75,7 @@ function FilterComboboxMultiple({
 	)
 }
 
-function FilterComboboxSingle({
+function ComboboxFilterSingle({
 	id,
 	label,
 	value,
@@ -76,7 +83,15 @@ function FilterComboboxSingle({
 	placeholder,
 	options = [],
 	disabled = false
-}: FilterComboboxProps & { value: string }) {
+}: {
+	id: string
+	label: string
+	value: string
+	onChange: (value: string | string[]) => void
+	placeholder?: string
+	options?: { label: string; value: string }[]
+	disabled?: boolean
+}) {
 	return (
 		<div className='flex flex-col gap-1.5'>
 			<Label htmlFor={id} className='text-xs text-muted-foreground'>
@@ -109,27 +124,52 @@ function FilterComboboxSingle({
 	)
 }
 
-export function FilterCombobox(props: FilterComboboxProps) {
-	if (props.multiple) {
-		const value = Array.isArray(props.value) ? props.value : []
+export function FilterCombobox({
+	blockConfig,
+	editMode,
+	filterValue,
+	onFilterChange
+}: BlockComponentProps) {
+	const config = blockConfig.config as FilterComboboxConfig
+	const label = config.label ?? 'Filter'
+	const field = config.field ?? ''
+	const placeholder = config.placeholder
+	const options = config.options ?? []
+	const multiple = config.multiple ?? false
+
+	const id = blockConfig.id
+
+	// Handle filter value changes
+	const handleChange = (value: unknown) => {
+		if (onFilterChange && typeof onFilterChange === 'function') {
+			onFilterChange(field, value)
+		}
+	}
+
+	if (multiple) {
+		const arrayValue = Array.isArray(filterValue) ? filterValue : []
 		return (
-			<FilterComboboxMultiple
-				{...props}
-				value={value}
-				onChange={(v: string | string[]) =>
-					props.onChange(Array.isArray(v) ? v : v ? [v] : [])
-				}
+			<ComboboxFilterMultiple
+				id={id}
+				label={label}
+				value={arrayValue}
+				onChange={handleChange}
+				placeholder={placeholder}
+				options={options}
+				disabled={editMode}
 			/>
 		)
 	}
-	const value = typeof props.value === 'string' ? props.value : ''
+	const stringValue = typeof filterValue === 'string' ? filterValue : ''
 	return (
-		<FilterComboboxSingle
-			{...props}
-			value={value}
-			onChange={(v: string | string[]) =>
-				props.onChange(typeof v === 'string' ? v : v?.[0] ?? '')
-			}
+		<ComboboxFilterSingle
+			id={id}
+			label={label}
+			value={stringValue}
+			onChange={handleChange}
+			placeholder={placeholder}
+			options={options}
+			disabled={editMode}
 		/>
 	)
 }

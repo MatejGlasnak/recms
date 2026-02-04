@@ -18,6 +18,7 @@ export interface BlockComponentProps {
 	editMode?: boolean
 	resourceId?: string
 	onConfigUpdate?: (blockId: string, config: Record<string, unknown>) => Promise<void>
+	onDelete?: () => Promise<void> | void
 	// Context-specific props that blocks might need
 	[key: string]: unknown
 }

@@ -22,8 +22,10 @@ export interface FormModalProps {
 	fieldConfig: BlockFieldConfig
 	initialValues?: Record<string, unknown>
 	onSubmit: (values: Record<string, unknown>) => void | Promise<void>
+	onDelete?: () => void | Promise<void>
 	submitLabel?: string
 	cancelLabel?: string
+	deleteLabel?: string
 }
 
 export function FormModal({
@@ -34,12 +36,15 @@ export function FormModal({
 	fieldConfig,
 	initialValues = {},
 	onSubmit,
+	onDelete,
 	submitLabel = 'Save',
-	cancelLabel = 'Cancel'
+	cancelLabel = 'Cancel',
+	deleteLabel = 'Delete'
 }: FormModalProps) {
 	const [values, setValues] = useState<Record<string, unknown>>(initialValues)
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isDeleting, setIsDeleting] = useState(false)
 
 	// Reset values when modal opens
 	useEffect(() => {
@@ -90,6 +95,23 @@ export function FormModal({
 			})
 		} finally {
 			setIsSubmitting(false)
+		}
+	}
+
+	const handleDelete = async () => {
+		if (!onDelete) return
+
+		setIsDeleting(true)
+		try {
+			await onDelete()
+			onOpenChange(false)
+		} catch (error) {
+			console.error('Delete error:', error)
+			setErrors({
+				_form: error instanceof Error ? error.message : 'Failed to delete'
+			})
+		} finally {
+			setIsDeleting(false)
 		}
 	}
 
@@ -200,17 +222,28 @@ export function FormModal({
 					<div className='space-y-4'>{renderFields(fieldsByTab.get('_all') ?? [])}</div>
 				)}
 
-				<DialogFooter>
-					<Button
-						variant='outline'
-						onClick={() => onOpenChange(false)}
-						disabled={isSubmitting}
-					>
-						{cancelLabel}
-					</Button>
-					<Button onClick={handleSubmit} disabled={isSubmitting}>
-						{isSubmitting ? 'Saving...' : submitLabel}
-					</Button>
+				<DialogFooter className={onDelete ? 'justify-between' : ''}>
+					{onDelete && (
+						<Button
+							variant='destructive'
+							onClick={handleDelete}
+							disabled={isSubmitting || isDeleting}
+						>
+							{isDeleting ? 'Deleting...' : deleteLabel}
+						</Button>
+					)}
+					<div className='flex gap-2'>
+						<Button
+							variant='outline'
+							onClick={() => onOpenChange(false)}
+							disabled={isSubmitting || isDeleting}
+						>
+							{cancelLabel}
+						</Button>
+						<Button onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
+							{isSubmitting ? 'Saving...' : submitLabel}
+						</Button>
+					</div>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

@@ -2,74 +2,25 @@
 
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
-import { FilterInput } from '../../filters/filter-input'
-import { FilterSelect } from '../../filters/filter-select'
-import { FilterCombobox } from '../../filters/filter-combobox'
-import { FilterCheckbox } from '../../filters/filter-checkbox'
-import type { BlockComponentProps } from '../../registry'
-import type { FilterConfig } from '../../../types/block-config'
-import { useState } from 'react'
+import { Grid } from '../grid'
 import { FormModal } from '../../form/FormModal'
 import { listFiltersConfig } from './config'
+import type { BlockComponentProps } from '../../registry'
+import type { BlockConfig } from '../../../types/block-config'
+import { useState } from 'react'
 
-interface FilterFieldProps {
-	filter: FilterConfig
-	value: unknown
-	onChange: (value: unknown) => void
-	disabled?: boolean
+interface NestedBlockConfig {
+	id: string
+	slug: string
+	columnSpan?: number
+	config: Record<string, unknown>
 }
 
-function FilterField({ filter, value, onChange, disabled }: FilterFieldProps) {
-	switch (filter.type) {
-		case 'input':
-			return (
-				<FilterInput
-					id={filter.id}
-					label={filter.label}
-					value={String(value ?? '')}
-					onChange={onChange}
-					placeholder={filter.placeholder}
-					disabled={disabled}
-				/>
-			)
-		case 'select':
-			return (
-				<FilterSelect
-					id={filter.id}
-					label={filter.label}
-					value={String(value ?? '')}
-					onChange={onChange}
-					placeholder={filter.placeholder}
-					options={filter.options}
-					disabled={disabled}
-				/>
-			)
-		case 'combobox':
-			return (
-				<FilterCombobox
-					id={filter.id}
-					label={filter.label}
-					value={(value ?? (filter.multiple ? [] : '')) as string | string[]}
-					onChange={onChange}
-					placeholder={filter.placeholder}
-					options={filter.options}
-					multiple={filter.multiple}
-					disabled={disabled}
-				/>
-			)
-		case 'checkbox':
-			return (
-				<FilterCheckbox
-					id={filter.id}
-					label={filter.label}
-					value={Boolean(value)}
-					onChange={onChange}
-					disabled={disabled}
-				/>
-			)
-		default:
-			return null
-	}
+interface ListFiltersConfig extends Record<string, unknown> {
+	title?: string
+	description?: string
+	columns?: number
+	blocks?: NestedBlockConfig[]
 }
 
 export function ListFilters({
@@ -77,10 +28,11 @@ export function ListFilters({
 	editMode,
 	onConfigUpdate,
 	filterValues: externalFilterValues,
-	onFilterChange: externalOnFilterChange
+	onFilterChange: externalOnFilterChange,
+	onDelete
 }: BlockComponentProps) {
-	const [showSettings, setShowSettings] = useState(false)
 	const [localFilterValues, setLocalFilterValues] = useState<Record<string, unknown>>({})
+	const [showConfigModal, setShowConfigModal] = useState(false)
 
 	// Use external filter values if provided, otherwise use local state
 	const filterValues = externalFilterValues
@@ -90,14 +42,13 @@ export function ListFilters({
 		? (externalOnFilterChange as (values: Record<string, unknown>) => void)
 		: setLocalFilterValues
 
-	const config = blockConfig.config as {
-		filters?: FilterConfig[]
-	}
+	const config = blockConfig.config as ListFiltersConfig
+	const blocks = config.blocks ?? []
+	const title = config.title
+	const description = config.description
 
-	const filters = config.filters ?? []
-
-	const handleFilterChange = (filterId: string, value: unknown) => {
-		onFilterChangeHandler({ ...filterValues, [filterId]: value })
+	const handleFilterChange = (field: string, value: unknown) => {
+		onFilterChangeHandler({ ...filterValues, [field]: value })
 	}
 
 	const handleClearFilters = () => {
@@ -110,74 +61,108 @@ export function ListFilters({
 		return v !== null && v !== undefined && v !== ''
 	})
 
-	const handleSaveSettings = async (values: Record<string, unknown>) => {
-		if (onConfigUpdate) {
-			await onConfigUpdate(blockConfig.id, values)
-		}
-		setShowSettings(false)
-	}
-
-	if (filters.length === 0 && !editMode) {
+	if (blocks.length === 0 && !editMode) {
 		return null
 	}
 
-	const showSampleFilter = filters.length === 0 && editMode
+	// Create a modified blockConfig for the Grid with filter-specific props
+	const gridBlockConfig: BlockConfig = {
+		...blockConfig,
+		config: {
+			columns: config.columns ?? 6,
+			blocks: blocks
+		}
+	}
+
+	const handleConfigUpdate = async (values: Record<string, unknown>) => {
+		if (onConfigUpdate) {
+			await onConfigUpdate(blockConfig.id, { ...config, ...values })
+		}
+		setShowConfigModal(false)
+	}
+
+	const handleDelete = async () => {
+		if (onDelete && typeof onDelete === 'function') {
+			await onDelete()
+		}
+	}
 
 	return (
 		<>
 			<div
-				className='relative flex items-center gap-4 mb-6'
-				onClick={editMode ? () => setShowSettings(true) : undefined}
+				className={`space-y-4 mb-6 ${
+					editMode
+						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer [&:has(>*:hover)]:border-primary/40'
+						: ''
+				}`}
+				onClick={e => {
+					if (editMode) {
+						// Only open config if clicking directly on the container, not on children
+						if (e.target === e.currentTarget) {
+							setShowConfigModal(true)
+						}
+					}
+				}}
 			>
-				{showSampleFilter ? (
-					<div className='opacity-50'>
-						<FilterInput
-							id='sample-search'
-							label='Search'
-							value=''
-							onChange={() => {}}
-							placeholder='Type to search...'
-							disabled={true}
+				{/* Header with Title and Description */}
+				{(title || description) && (
+					<div className='flex items-start justify-between gap-4'>
+						<div className='flex-1'>
+							{title && <h3 className='text-lg font-semibold'>{title}</h3>}
+							{description && (
+								<p className='text-sm text-muted-foreground mt-1'>{description}</p>
+							)}
+						</div>
+					</div>
+				)}
+
+				{/* Filters Grid */}
+				<div
+					className='flex items-start gap-4'
+					onClick={e => editMode && e.stopPropagation()}
+				>
+					<div className='flex-1' onClick={e => editMode && e.stopPropagation()}>
+						<Grid
+							blockConfig={gridBlockConfig}
+							editMode={editMode}
+							onConfigUpdate={onConfigUpdate}
+							filterValue={(field: string) => filterValues[field]}
+							onFilterChange={handleFilterChange}
+							allowedBlockTypes={[
+								'filter-input',
+								'filter-select',
+								'filter-combobox',
+								'filter-checkbox'
+							]}
 						/>
 					</div>
-				) : (
-					<>
-						{filters.map(filter => (
-							<FilterField
-								key={filter.id}
-								filter={filter}
-								value={filterValues[filter.id]}
-								onChange={value => handleFilterChange(filter.id, value)}
-								disabled={editMode}
-							/>
-						))}
-						{hasActiveFilters && (
-							<Button
-								variant='ghost'
-								size='sm'
-								onClick={e => {
-									e.stopPropagation()
-									handleClearFilters()
-								}}
-								className='shrink-0'
-								disabled={editMode}
-							>
-								<X className='mr-2 h-4 w-4' />
-								Clear
-							</Button>
-						)}
-					</>
-				)}
+					{hasActiveFilters && !editMode && (
+						<Button
+							variant='ghost'
+							size='sm'
+							onClick={e => {
+								e.stopPropagation()
+								handleClearFilters()
+							}}
+							className='shrink-0 mt-2'
+						>
+							<X className='mr-2 h-4 w-4' />
+							Clear
+						</Button>
+					)}
+				</div>
 			</div>
 
+			{/* Configuration Modal */}
 			<FormModal
-				open={showSettings}
-				onOpenChange={setShowSettings}
-				title='Filter Settings'
-				description='Configure the list page filters'
+				open={showConfigModal}
+				onOpenChange={setShowConfigModal}
+				title='Configure Filters'
+				description='Configure the filters block settings'
 				fieldConfig={listFiltersConfig}
 				initialValues={config}
-				onSubmit={handleSaveSettings}
+				onSubmit={handleConfigUpdate}
+				onDelete={onDelete ? handleDelete : undefined}
 			/>
 		</>
 	)

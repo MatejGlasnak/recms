@@ -6,6 +6,7 @@ export const filterInputConfig: BlockFieldConfig = {
 			name: 'label',
 			type: 'text',
 			label: 'Label',
+			placeholder: 'e.g., Search, Name',
 			required: true,
 			span: 'full'
 		},
@@ -13,6 +14,7 @@ export const filterInputConfig: BlockFieldConfig = {
 			name: 'field',
 			type: 'text',
 			label: 'Field Name',
+			placeholder: 'e.g., name, title, email',
 			required: true,
 			comment: 'The database field to filter on',
 			span: 'full'
@@ -21,20 +23,8 @@ export const filterInputConfig: BlockFieldConfig = {
 			name: 'placeholder',
 			type: 'text',
 			label: 'Placeholder',
-			span: 'full'
-		},
-		{
-			name: 'operator',
-			type: 'dropdown',
-			label: 'Operator',
-			default: 'contains',
-			options: [
-				{ label: 'Equals', value: 'eq' },
-				{ label: 'Not Equals', value: 'ne' },
-				{ label: 'Contains', value: 'contains' },
-				{ label: 'Starts With', value: 'startsWith' },
-				{ label: 'Ends With', value: 'endsWith' }
-			],
+			placeholder: 'e.g., Search by name...',
+			comment: 'Optional placeholder text',
 			span: 'full'
 		}
 	]

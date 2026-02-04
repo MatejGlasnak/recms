@@ -18,6 +18,13 @@ import { ListHeader, listHeaderConfig } from '../../blocks/list-header'
 import { ListFilters, listFiltersConfig } from '../../blocks/list-filters'
 import { ListTable, listTableConfig } from '../../blocks/list-table'
 import { ListPagination, listPaginationConfig } from '../../blocks/list-pagination'
+import { Grid, gridConfig } from '../../blocks/grid'
+
+// Import filters
+import { FilterInput, filterInputConfig } from '../../filters/filter-input'
+import { FilterSelect, filterSelectConfig } from '../../filters/filter-select'
+import { FilterCombobox, filterComboboxConfig } from '../../filters/filter-combobox'
+import { FilterCheckbox, filterCheckboxConfig } from '../../filters/filter-checkbox'
 
 // Import field types
 import { TextField } from '../../form/field-types/text-field'
@@ -118,6 +125,42 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 			config: listPaginationConfig,
 			label: 'List Pagination'
 		})
+		registerBlock({
+			slug: 'grid',
+			Component: Grid,
+			config: gridConfig,
+			label: 'Grid'
+		})
+		registerBlock({
+			slug: 'filter-input',
+			Component: FilterInput,
+			config: filterInputConfig,
+			label: 'Filter Input'
+		})
+		registerBlock({
+			slug: 'filter-select',
+			Component: FilterSelect,
+			config: filterSelectConfig,
+			label: 'Filter Select'
+		})
+		registerBlock({
+			slug: 'filter-combobox',
+			Component: FilterCombobox,
+			config: filterComboboxConfig,
+			label: 'Filter Combobox'
+		})
+		registerBlock({
+			slug: 'filter-checkbox',
+			Component: FilterCheckbox,
+			config: filterCheckboxConfig,
+			label: 'Filter Checkbox'
+		}),
+			registerBlock({
+				slug: 'table-filter',
+				Component: FilterCheckbox,
+				config: filterCheckboxConfig,
+				label: 'Filter Checkbox'
+			})
 	}, [registerBlock])
 
 	const { data: resources = [], isLoading: isResourcesLoading } = useResources()
@@ -315,24 +358,16 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 					}
 
 					return (
-						<div
+						<BlockRenderer
 							key={block.id}
-							className={`mb-6 relative ${
-								editMode
-									? 'p-3 border border-dashed border-primary/40 rounded-lg hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer'
-									: ''
-							}`}
-						>
-							<BlockRenderer
-								block={block}
-								data={data}
-								isLoading={isLoading}
-								editMode={editMode}
-								resourceId={resourceId}
-								onConfigUpdate={handleBlockConfigUpdate}
-								additionalProps={additionalProps}
-							/>
-						</div>
+							block={block}
+							data={data}
+							isLoading={isLoading}
+							editMode={editMode}
+							resourceId={resourceId}
+							onConfigUpdate={handleBlockConfigUpdate}
+							additionalProps={additionalProps}
+						/>
 					)
 				})}
 		</div>

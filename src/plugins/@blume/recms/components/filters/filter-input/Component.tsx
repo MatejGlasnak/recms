@@ -2,24 +2,34 @@
 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { BlockComponentProps } from '../../registry/BlockRegistry'
 
-export interface FilterInputProps {
-	id: string
-	label: string
-	value: string
-	onChange: (value: string) => void
+interface FilterInputConfig {
+	label?: string
+	field?: string
 	placeholder?: string
-	disabled?: boolean
 }
 
 export function FilterInput({
-	id,
-	label,
-	value,
-	onChange,
-	placeholder,
-	disabled = false
-}: FilterInputProps) {
+	blockConfig,
+	editMode,
+	filterValue,
+	onFilterChange
+}: BlockComponentProps) {
+	const config = blockConfig.config as FilterInputConfig
+	const label = config.label ?? 'Filter'
+	const field = config.field ?? ''
+	const placeholder = config.placeholder
+
+	const id = blockConfig.id
+
+	// Handle filter value changes
+	const handleChange = (value: string) => {
+		if (onFilterChange && typeof onFilterChange === 'function') {
+			onFilterChange(field, value)
+		}
+	}
+
 	return (
 		<div className='flex flex-col gap-1.5'>
 			<Label htmlFor={id} className='text-xs text-muted-foreground'>
@@ -28,10 +38,10 @@ export function FilterInput({
 			<Input
 				id={id}
 				placeholder={placeholder || `Enter ${label.toLowerCase()}...`}
-				value={value || ''}
-				onChange={e => onChange(e.target.value)}
-				className='h-10 w-[240px]'
-				disabled={disabled}
+				value={String(filterValue ?? '')}
+				onChange={e => handleChange(e.target.value)}
+				className='h-10 w-full'
+				disabled={editMode}
 			/>
 		</div>
 	)
