@@ -1,13 +1,23 @@
 import { DataProvider } from '@refinedev/core'
 import axios, { AxiosInstance } from 'axios'
+import { getExternalApiBearerToken } from '@/lib/constants/external-api-token'
+
+const EXTERNAL_API_BEARER_HEADER = 'X-External-Api-Bearer-Token'
 
 // Create axios instance that uses our Next.js API proxy
-// This avoids CORS issues and keeps the bearer token server-side
 const axiosInstance: AxiosInstance = axios.create({
 	baseURL: '/api/external',
 	headers: {
 		'Content-Type': 'application/json'
 	}
+})
+
+axiosInstance.interceptors.request.use(config => {
+	const token = getExternalApiBearerToken()
+	if (token) {
+		config.headers[EXTERNAL_API_BEARER_HEADER] = token
+	}
+	return config
 })
 
 export const externalDataProvider: DataProvider = {

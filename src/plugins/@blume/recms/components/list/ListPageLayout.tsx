@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import type { VisibilityState } from '@tanstack/react-table'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -11,7 +12,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Settings2 } from 'lucide-react'
+import { AlertCircle, Settings2 } from 'lucide-react'
 import type { ListConfig } from '../../types'
 import { formatHeader } from '../../utils'
 import { ListPageHeader } from './ListPageHeader'
@@ -34,8 +35,8 @@ export interface ListPageLayoutProps {
 	onPageChange: (page: number) => void
 	onPageSizeChange: (size: number) => void
 	total: number
-	isLoading: boolean
 	isError: boolean
+	errorMessage?: string
 	children: ReactNode
 }
 
@@ -54,25 +55,26 @@ export function ListPageLayout({
 	onPageChange,
 	onPageSizeChange,
 	total,
-	isLoading,
 	isError,
+	errorMessage,
 	children
 }: ListPageLayoutProps) {
 	const defaultTitle = (resourceMeta?.label as string) || formatHeader(resourceId)
 	const defaultDescription = `Manage and view all ${defaultTitle.toLowerCase()} in your system`
 
-	if (isLoading) {
-		return (
-			<div className='flex items-center justify-center h-96'>
-				<div className='text-muted-foreground'>Loading...</div>
-			</div>
-		)
-	}
-
 	if (isError) {
 		return (
-			<div className='flex items-center justify-center h-96'>
-				<div className='text-destructive'>Something went wrong loading the data.</div>
+			<div
+				className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6'
+				style={{ paddingTop: '24px' }}
+			>
+				<Alert variant='destructive'>
+					<AlertCircle className='h-4 w-4' />
+					<AlertTitle>Error loading data</AlertTitle>
+					<AlertDescription>
+						{errorMessage ?? 'Something went wrong loading the data.'}
+					</AlertDescription>
+				</Alert>
 			</div>
 		)
 	}

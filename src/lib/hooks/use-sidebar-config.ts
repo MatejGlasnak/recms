@@ -30,7 +30,8 @@ async function updateSidebarConfig(data: SidebarConfig): Promise<SidebarConfig> 
 		throw new Error('Failed to save sidebar configuration')
 	}
 
-	return response.json()
+	const json = await response.json()
+	return json.config ?? data
 }
 
 // Hooks
@@ -46,7 +47,9 @@ export function useUpdateSidebarConfig() {
 
 	return useMutation({
 		mutationFn: updateSidebarConfig,
-		onSuccess: () => {
+		onSuccess: savedConfig => {
+			// Update cache immediately so the real sidebar reflects changes without a full refresh
+			queryClient.setQueryData(sidebarConfigKeys.config(), savedConfig)
 			queryClient.invalidateQueries({ queryKey: sidebarConfigKeys.config() })
 			toast.success('Sidebar configuration saved!')
 		},

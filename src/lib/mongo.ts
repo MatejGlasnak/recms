@@ -69,3 +69,9 @@ export async function getAppResourcesListsCollection(): Promise<Collection> {
 	const db = await getDatabase()
 	return db.collection('app_resources_lists')
 }
+
+// Helper to get app resources show config collection (for storing show page configurations)
+export async function getAppResourcesShowCollection(): Promise<Collection> {
+	const db = await getDatabase()
+	return db.collection('app_resources_show')
+}

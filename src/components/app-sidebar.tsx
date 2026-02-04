@@ -18,12 +18,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useSidebarConfig } from '@/lib/contexts/sidebar-config-context'
 import { SidebarGroupRenderer } from '@/components/sidebar-config/sidebar-group-renderer'
-
-const userData = {
-	name: 'Matej Glasnak',
-	email: 'matej.glasnak@blume.sk',
-	avatar: '/avatars/shadcn.jpg'
-}
+import { useCurrentUser } from '@/lib/hooks/use-current-user'
 
 // Hardcoded bottom items (settings, upgrade, etc.)
 const bottomItems = [
@@ -41,6 +36,11 @@ const bottomItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { config, isLoading } = useSidebarConfig()
+	const { data: currentUser, isLoading: userLoading } = useCurrentUser()
+
+	const userData = currentUser
+		? { name: currentUser.displayName, email: currentUser.email }
+		: { name: userLoading ? '…' : 'User', email: '' }
 
 	return (
 		<Sidebar collapsible='offcanvas' {...props}>

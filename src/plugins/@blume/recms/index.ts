@@ -1,9 +1,15 @@
 // @blume/recms - Public API
 // Types
-export type { FilterConfig, ColumnConfig, ListConfig, ListConfigFormData } from './types'
+export type {
+	FilterConfig,
+	ColumnConfig,
+	ListConfig,
+	ListConfigFormData,
+	ShowConfig
+} from './types'
 
 // Hooks
-export { useListConfig, useUpdateListConfig } from './hooks'
+export { useListConfig, useUpdateListConfig, useShowConfig, useUpdateShowConfig } from './hooks'
 
 // Utils
 export { formatHeader, getPageNumbers, buildListFilters } from './utils'
@@ -14,6 +20,11 @@ export { EditableWrapper } from './components/ui/EditableWrapper'
 // List components
 export { ListPage } from './pages/resources/ListPage'
 export { ListPageLayout } from './components/list/ListPageLayout'
+
+// Show components
+export { ShowPage } from './pages/resources/ShowPage'
+export { ShowPageLayout } from './components/show/ShowPageLayout'
+export { ShowFieldsEditor } from './components/show/ShowFieldsEditor'
 export { ListPageHeader } from './components/list/ListPageHeader'
 export { ListPageFilters } from './components/list/ListPageFilters'
 export { ListPageTable } from './components/list/ListPageTable'

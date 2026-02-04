@@ -40,9 +40,7 @@ export function ListPageFilters({
 	const filterContent = (
 		<div className='flex items-center gap-4 flex-wrap'>
 			{configuredFilters.length === 0 ? (
-				<div className='text-sm text-muted-foreground'>
-					No filters configured. Click to add filters.
-				</div>
+				<div className='text-sm text-muted-foreground'></div>
 			) : (
 				configuredFilters.map(filter => (
 					<FilterField

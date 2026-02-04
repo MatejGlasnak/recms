@@ -1,8 +1,10 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useList, useResourceParams } from '@refinedev/core'
+import { useList, useResourceParams, useNavigation } from '@refinedev/core'
 import { useMemo, useState, useCallback, useEffect } from 'react'
+import { usePageSetup } from '@/lib/contexts/page-context'
+import { useResources } from '@/lib/hooks/use-resources'
 import {
 	ColumnDef,
 	flexRender,
@@ -20,9 +22,11 @@ import {
 	TableRow
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { useListConfig } from '../../hooks'
-import { buildListFilters } from '../../utils'
+import { buildListFilters, formatHeader } from '../../utils'
 import { ColumnCell } from '../../components/list/columns/ColumnCell'
+import { ConfigEmptyState } from '../../components/ui/ConfigEmptyState'
 import { ListPageLayout } from '../../components/list/ListPageLayout'
 
 export interface ListPageContainerProps {
@@ -31,10 +35,53 @@ export interface ListPageContainerProps {
 
 export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps) {
 	const params = useParams()
-	const resourceId = resourceIdProp ?? (params?.slug as string) ?? ''
+	const resourceId = resourceIdProp ?? (params?.resourceName as string) ?? ''
+
+	const { data: resources = [], isLoading: isResourcesLoading } = useResources()
+	const resourceDef = useMemo(
+		() => resources.find(r => r.name === resourceId),
+		[resources, resourceId]
+	)
+
 	const { resource } = useResourceParams({ resource: resourceId })
-	console.log('resource', resource)
-	const { data: listConfig } = useListConfig(resourceId)
+	const { data: listConfig, isLoading: isConfigLoading } = useListConfig(resourceId)
+	const { edit: goToEdit, show: goToShow } = useNavigation()
+
+	// Use resource definition (label/endpoint) so breadcrumb and API use correct values
+	// before Refine's resource params are populated (avoids brief "Blog-Post" and wrong /blog-posts call)
+	const resourceLabel =
+		resourceDef?.label ??
+		(resource?.meta?.label as string) ??
+		(isResourcesLoading ? 'Loading…' : formatHeader(resourceId))
+	const isResourceLabelLoading = resourceLabel === 'Loading…'
+	usePageSetup(resourceLabel, [
+		{ label: 'Resources' },
+		{ label: resourceLabel, muted: isResourceLabelLoading }
+	])
+
+	const rowClickAction = listConfig?.rowClickAction ?? 'none'
+
+	const getRecordId = useCallback((record: unknown): string | null => {
+		if (record == null || typeof record !== 'object') return null
+		const r = record as Record<string, unknown>
+		const id = r.id ?? r._id
+		if (id == null) return null
+		return String(id)
+	}, [])
+
+	const handleRowClick = useCallback(
+		(record: unknown) => {
+			if (rowClickAction === 'none') return
+			const id = getRecordId(record)
+			if (!id) return
+			if (rowClickAction === 'edit') {
+				goToEdit(resourceId, id)
+			} else if (rowClickAction === 'show') {
+				goToShow(resourceId, id)
+			}
+		},
+		[rowClickAction, resourceId, goToEdit, goToShow, getRecordId]
+	)
 
 	const [editMode, setEditMode] = useState(false)
 	const [currentPage, setCurrentPage] = useState(1)
@@ -61,7 +108,11 @@ export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps)
 		sorters: sorters as any,
 		filters: filters as any,
 		dataProviderName: 'external',
-		meta: { endpoint: resource?.meta?.endpoint }
+		meta: { endpoint: resourceDef?.endpoint ?? resource?.meta?.endpoint },
+		queryOptions: {
+			// Avoid wrong API call (e.g. /api/external/blog-posts) until we have the correct endpoint
+			enabled: !!(resourceDef?.endpoint ?? resource?.meta?.endpoint)
+		}
 	})
 
 	const { result, query } = listResult
@@ -156,18 +207,14 @@ export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps)
 
 	const tableContent =
 		columns.length === 0 ? (
-			<div className='overflow-hidden rounded-md border'>
-				<div className='flex flex-col items-center justify-center py-16 px-4 text-center'>
-					<div className='max-w-md space-y-2'>
-						<h3 className='text-lg font-semibold'>No Columns Configured</h3>
-						<p className='text-sm text-muted-foreground'>
-							{editMode
-								? 'Click here to add and configure columns.'
-								: 'Enable Edit mode to configure columns.'}
-						</p>
-					</div>
-				</div>
-			</div>
+			<ConfigEmptyState
+				title='No Columns Configured'
+				description={
+					editMode
+						? 'Click here to add and configure columns.'
+						: 'Enable Edit mode to configure columns.'
+				}
+			/>
 		) : (
 			<div className='overflow-hidden rounded-md border'>
 				<Table>
@@ -193,6 +240,16 @@ export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps)
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && 'selected'}
+									onClick={
+										rowClickAction !== 'none'
+											? () => handleRowClick(row.original)
+											: undefined
+									}
+									className={
+										rowClickAction !== 'none'
+											? 'cursor-pointer hover:bg-muted/50'
+											: undefined
+									}
 								>
 									{row.getVisibleCells().map(cell => (
 										<TableCell key={cell.id}>
@@ -216,10 +273,25 @@ export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps)
 			</div>
 		)
 
+	// Wait for resources, config, and list data so we don't show table until ready
+	if (isConfigLoading || (resourceId && isResourcesLoading) || isLoading) {
+		return (
+			<div
+				className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-[min(24rem,60vh)]'
+				style={{ paddingTop: '24px' }}
+			>
+				<Spinner className='size-6 mb-2' />
+				<p className='text-sm text-muted-foreground'>
+					{isConfigLoading ? 'Loading page configuration…' : 'Loading data…'}
+				</p>
+			</div>
+		)
+	}
+
 	return (
 		<ListPageLayout
 			resourceId={resourceId}
-			resourceMeta={{ label: resource?.meta?.label as string }}
+			resourceMeta={{ label: resourceLabel }}
 			listConfig={listConfig ?? undefined}
 			editMode={editMode}
 			onEditModeToggle={() => setEditMode(prev => !prev)}
@@ -232,8 +304,8 @@ export function ListPage({ resourceId: resourceIdProp }: ListPageContainerProps)
 			onPageChange={setCurrentPage}
 			onPageSizeChange={setPageSize}
 			total={total}
-			isLoading={isLoading}
 			isError={isError}
+			errorMessage={query.error instanceof Error ? query.error.message : undefined}
 		>
 			{tableContent}
 		</ListPageLayout>

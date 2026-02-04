@@ -137,7 +137,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 						</Label>
 						<Input
 							id='endpoint'
-							placeholder='e.g., /api/v1/admin/blog/categories'
+							placeholder='e.g., v1/admin/blog/categories'
 							{...form.register('endpoint')}
 							className='h-9'
 						/>

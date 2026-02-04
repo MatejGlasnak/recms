@@ -53,7 +53,8 @@ const listConfigSchema = z.object({
 		})
 		.optional(),
 	columns: z.array(columnConfigSchema).optional(),
-	filters: z.array(filterConfigSchema).optional()
+	filters: z.array(filterConfigSchema).optional(),
+	rowClickAction: z.enum(['show', 'edit', 'none']).optional()
 })
 
 // GET - Fetch list configuration for a specific resource
@@ -73,7 +74,8 @@ export async function GET(
 				resourceId,
 				meta: {},
 				columns: [],
-				filters: []
+				filters: [],
+				rowClickAction: 'none'
 			})
 		}
 
@@ -82,7 +84,8 @@ export async function GET(
 			resourceId: config.resourceId,
 			meta: config.meta || {},
 			columns: config.columns || [],
-			filters: config.filters || []
+			filters: config.filters || [],
+			rowClickAction: config.rowClickAction ?? 'none'
 		})
 	} catch (error) {
 		console.error('Error fetching list config:', error)

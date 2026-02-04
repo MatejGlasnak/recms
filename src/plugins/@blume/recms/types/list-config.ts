@@ -33,6 +33,8 @@ export interface ColumnConfig {
 	format?: string // Optional format string (for dates, numbers, etc.)
 }
 
+export type RowClickAction = 'show' | 'edit' | 'none'
+
 export interface ListConfig {
 	id: string
 	resourceId: string
@@ -42,6 +44,8 @@ export interface ListConfig {
 	}
 	columns?: ColumnConfig[]
 	filters?: FilterConfig[]
+	/** What happens when clicking a row in the table. Default: 'none' */
+	rowClickAction?: RowClickAction
 }
 
 export interface ListConfigFormData {

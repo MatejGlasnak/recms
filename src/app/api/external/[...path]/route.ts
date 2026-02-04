@@ -39,10 +39,14 @@ export async function PATCH(
 	return proxyRequest(request, await params, 'PATCH')
 }
 
+const EXTERNAL_API_BEARER_HEADER = 'x-external-api-bearer-token'
+
 async function proxyRequest(request: NextRequest, params: { path: string[] }, method: string) {
 	const { path } = params
 	const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_REST_URL
-	const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN
+	const bearerToken =
+		request.headers.get(EXTERNAL_API_BEARER_HEADER) ??
+		request.headers.get('X-External-Api-Bearer-Token')
 
 	if (!externalApiUrl) {
 		return NextResponse.json({ error: 'External API URL not configured' }, { status: 500 })
@@ -63,7 +67,7 @@ async function proxyRequest(request: NextRequest, params: { path: string[] }, me
 			'Content-Type': 'application/json'
 		}
 
-		// Add bearer token if available
+		// Add bearer token from client (stored in localStorage, sent in header)
 		if (bearerToken) {
 			headers['Authorization'] = `Bearer ${bearerToken}`
 		}

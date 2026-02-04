@@ -32,11 +32,26 @@ export function SiteHeader() {
 									{index > 0 && <BreadcrumbSeparator />}
 									<BreadcrumbItem>
 										{crumb.href && index < breadcrumbs.length - 1 ? (
-											<BreadcrumbLink asChild>
+											<BreadcrumbLink
+												asChild
+												className={
+													crumb.muted
+														? 'text-muted-foreground'
+														: undefined
+												}
+											>
 												<Link href={crumb.href}>{crumb.label}</Link>
 											</BreadcrumbLink>
 										) : (
-											<BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+											<BreadcrumbPage
+												className={
+													crumb.muted
+														? 'text-muted-foreground font-normal'
+														: undefined
+												}
+											>
+												{crumb.label}
+											</BreadcrumbPage>
 										)}
 									</BreadcrumbItem>
 								</div>

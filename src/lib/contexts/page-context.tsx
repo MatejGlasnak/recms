@@ -2,9 +2,11 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
 	label: string
 	href?: string
+	/** When true, render with muted (less visible) styling */
+	muted?: boolean
 }
 
 interface PageContextType {
@@ -17,7 +19,7 @@ interface PageContextType {
 const PageContext = createContext<PageContextType | undefined>(undefined)
 
 export function PageProvider({ children }: { children: ReactNode }) {
-	const [title, setTitle] = useState('Documents')
+	const [title, setTitle] = useState('')
 	const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([])
 
 	return (

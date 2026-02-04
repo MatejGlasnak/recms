@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react'
 import type { ListConfig } from '../../types'
-import { EditableWrapper } from '../ui/EditableWrapper'
 import { ListColumnsEditor } from './columns-editor/ListColumnsEditor'
 
 export interface ListPageTableProps {
