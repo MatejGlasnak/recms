@@ -4,15 +4,16 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfigEmptyState } from '../ui/ConfigEmptyState'
 import { EditableWrapper } from '../ui/EditableWrapper'
-import type { ListConfig, ShowConfig } from '../../types'
+import type { ShowConfig } from '../../types'
 import { ShowFieldsEditor } from './ShowFieldsEditor'
 import { ShowTabsEditor } from './ShowTabsEditor'
 import { Plus } from 'lucide-react'
 
 export interface ShowTabContentProps {
 	resourceId: string
-	listConfig: ListConfig | undefined
 	showConfig: ShowConfig | undefined
+	/** The current record being viewed */
+	record: Record<string, unknown> | null
 	editMode: boolean
 	/** When true, show empty state (no groups in this tab). */
 	empty: boolean
@@ -30,8 +31,8 @@ export interface ShowTabContentProps {
 
 export function ShowTabContent({
 	resourceId,
-	listConfig,
 	showConfig,
+	record,
 	editMode,
 	empty,
 	hasTabs,
@@ -95,16 +96,14 @@ export function ShowTabContent({
 						}
 					/>
 				</EditableWrapper>
-				{listConfig && (
-					<ShowFieldsEditor
-						resourceId={resourceId}
-						listConfig={listConfig}
-						showConfig={showConfig}
-						tabIndex={tabIndex}
-						open={fieldsEditorOpen}
-						onOpenChange={setFieldsEditorOpen}
-					/>
-				)}
+				<ShowFieldsEditor
+					resourceId={resourceId}
+					showConfig={showConfig}
+					record={record}
+					tabIndex={tabIndex}
+					open={fieldsEditorOpen}
+					onOpenChange={setFieldsEditorOpen}
+				/>
 			</>
 		)
 	}
@@ -119,16 +118,14 @@ export function ShowTabContent({
 			>
 				{children}
 			</EditableWrapper>
-			{listConfig && (
-				<ShowFieldsEditor
-					resourceId={resourceId}
-					listConfig={listConfig}
-					showConfig={showConfig}
-					tabIndex={tabIndex}
-					open={fieldsEditorOpen}
-					onOpenChange={setFieldsEditorOpen}
-				/>
-			)}
+			<ShowFieldsEditor
+				resourceId={resourceId}
+				showConfig={showConfig}
+				record={record}
+				tabIndex={tabIndex}
+				open={fieldsEditorOpen}
+				onOpenChange={setFieldsEditorOpen}
+			/>
 		</>
 	)
 }

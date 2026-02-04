@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/spinner'
 import { usePageSetup } from '@/lib/contexts/page-context'
-import { useListConfig, useShowConfig } from '../../hooks'
+import { useShowConfig } from '../../hooks'
 import { formatHeader } from '../../utils'
 import type { ShowGroup, ShowItem, ShowTab } from '../../types/show-config'
 import { ShowPageLayout } from '../../components/show/ShowPageLayout'
@@ -53,12 +53,13 @@ function ShowGroupBlock({
 	const columns = group.columns ?? 1
 	const items = getGroupItems(group)
 	const groupLabel = group.label ?? group.name
+	const shouldShowLabel = group.showLabel ?? true
 
 	return (
 		<div className='space-y-3'>
-			{(groupLabel || group.description) && (
+			{((shouldShowLabel && groupLabel) || group.description) && (
 				<div className='space-y-1'>
-					{groupLabel && (
+					{shouldShowLabel && groupLabel && (
 						<h4 className='text-sm font-medium leading-none text-foreground'>
 							{groupLabel}
 						</h4>
@@ -102,9 +103,8 @@ export function ShowPage({ resourceId: resourceIdProp, id: idProp }: ShowPageCon
 	const resourceId = resourceIdProp ?? (params?.resourceName as string) ?? ''
 	const id = idProp ?? (params?.id as string) ?? ''
 	const { resource } = useResourceParams({ resource: resourceId })
-	const { data: listConfig, isLoading: isListConfigLoading } = useListConfig(resourceId)
 	const { data: showConfig, isLoading: isShowConfigLoading } = useShowConfig(resourceId)
-	const isConfigLoading = isListConfigLoading || isShowConfigLoading
+	const isConfigLoading = isShowConfigLoading
 
 	const [editMode, setEditMode] = useState(false)
 	const [tabEditorOpen, setTabEditorOpen] = useState(false)
@@ -180,8 +180,8 @@ export function ShowPage({ resourceId: resourceIdProp, id: idProp }: ShowPageCon
 			{!showTabsUI ? (
 				<ShowTabContent
 					resourceId={resourceId}
-					listConfig={listConfig ?? undefined}
 					showConfig={showConfig ?? undefined}
+					record={record}
 					editMode={editMode}
 					empty
 					hasTabs={false}
@@ -216,8 +216,8 @@ export function ShowPage({ resourceId: resourceIdProp, id: idProp }: ShowPageCon
 						>
 							<ShowTabContent
 								resourceId={resourceId}
-								listConfig={listConfig ?? undefined}
 								showConfig={showConfig ?? undefined}
+								record={record}
 								editMode={editMode}
 								empty={!(tab.groups && tab.groups.length > 0)}
 								hasTabs={hasTabs}

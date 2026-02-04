@@ -10,7 +10,7 @@ export interface EditableWrapperProps {
 }
 
 const editModeClassName =
-	'cursor-pointer transition-all border-2 border-dashed border-muted-foreground/30 rounded-md hover:border-muted-foreground/60 hover:bg-muted/50'
+	'cursor-pointer transition-all border-2 border-dashed border-muted-foreground/30 rounded-md hover:border-primary hover:border-solid'
 
 export function EditableWrapper({
 	editMode,

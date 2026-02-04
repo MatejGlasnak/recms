@@ -10,11 +10,12 @@ import {
 	DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Plus, Trash2, GripVertical, Pencil } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Field, FieldContent, FieldLabel, FieldDescription } from '@/components/ui/field'
+import { Loader2, Plus, Trash2, GripVertical, Tag, FileText } from 'lucide-react'
 import {
 	DndContext,
 	KeyboardSensor,
@@ -46,23 +47,30 @@ export interface ShowTabsEditorProps {
 function emptyTab(): Pick<ShowTab, 'label' | 'showLabel' | 'description'> & {
 	groups: ShowTab['groups']
 } {
-	return { label: 'New tab', showLabel: 'New tab', description: '', groups: [] }
+	return {
+		label: 'New tab',
+		showLabel: 'New tab',
+		description: '',
+		groups: [
+			{
+				columns: 1,
+				columnItems: [[]],
+				showLabel: true
+			}
+		]
+	}
 }
 
 function SortableTabRow({
 	tab,
 	index,
-	onSelect,
 	onEdit,
-	onDelete,
-	isSelected
+	onDelete
 }: {
 	tab: Pick<ShowTab, 'label' | 'showLabel' | 'description'>
 	index: number
-	onSelect: () => void
 	onEdit: () => void
 	onDelete: () => void
-	isSelected: boolean
 }) {
 	const id = `tabs:${index}`
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -76,9 +84,10 @@ function SortableTabRow({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={`flex items-center gap-2 rounded-lg border p-2 transition-colors ${
-				isSelected ? 'border-primary bg-muted/50' : 'border-border bg-card'
-			} ${isDragging ? 'opacity-50' : ''}`}
+			className={`flex items-center gap-2 rounded-lg border p-2 transition-colors hover:bg-muted/10 hover:border-primary cursor-pointer ${
+				isDragging ? 'opacity-50' : ''
+			}`}
+			onClick={onEdit}
 		>
 			<button
 				type='button'
@@ -86,27 +95,11 @@ function SortableTabRow({
 				{...attributes}
 				{...listeners}
 				aria-label='Drag to reorder'
+				onClick={e => e.stopPropagation()}
 			>
 				<GripVertical className='h-4 w-4' />
 			</button>
-			<button
-				type='button'
-				className='flex-1 text-left text-sm font-medium truncate'
-				onClick={onSelect}
-			>
-				{tab.label}
-			</button>
-			<Button
-				variant='ghost'
-				size='icon'
-				className='h-8 w-8 shrink-0'
-				onClick={e => {
-					e.stopPropagation()
-					onEdit()
-				}}
-			>
-				<Pencil className='h-3.5 w-3.5' />
-			</Button>
+			<div className='flex-1 text-left text-sm font-medium truncate'>{tab.label}</div>
 			<Button
 				variant='ghost'
 				size='icon'
@@ -135,7 +128,6 @@ export function ShowTabsEditor({
 	const [tabs, setTabs] = useState<
 		Array<Pick<ShowTab, 'label' | 'showLabel' | 'description'> & { groups: ShowTab['groups'] }>
 	>([])
-	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [editingTab, setEditingTab] = useState<{
 		index: number
 		label: string
@@ -158,7 +150,6 @@ export function ShowTabsEditor({
 					  }))
 					: []
 			)
-			setSelectedIndex(0)
 			setEditingTab(null)
 		}
 		if (!open) prevOpenRef.current = false
@@ -176,7 +167,6 @@ export function ShowTabsEditor({
 				  }))
 				: []
 		)
-		setSelectedIndex(0)
 		setEditingTab(null)
 	}, [showConfig?.showTabs, existingTabs])
 
@@ -203,13 +193,11 @@ export function ShowTabsEditor({
 		const to = Number(o.split(':')[1])
 		if (Number.isNaN(from) || Number.isNaN(to)) return
 		setTabs(prev => arrayMove(prev, from, to))
-		setSelectedIndex(to)
 	}, [])
 
 	const addTab = () => {
 		const newTab = emptyTab()
 		setTabs(prev => [...prev, newTab])
-		setSelectedIndex(tabs.length)
 		setEditingTab({
 			index: tabs.length,
 			label: newTab.label,
@@ -230,7 +218,6 @@ export function ShowTabsEditor({
 
 	const deleteTab = (index: number) => {
 		setTabs(prev => prev.filter((_, i) => i !== index))
-		setSelectedIndex(i => (i >= index && i > 0 ? i - 1 : i === index ? 0 : i))
 	}
 
 	const handleSave = async () => {
@@ -254,7 +241,7 @@ export function ShowTabsEditor({
 	return (
 		<>
 			<Dialog open={open} onOpenChange={handleOpenChange}>
-				<DialogContent className='max-w-md max-h-[90vh] overflow-y-auto'>
+				<DialogContent className='sm:max-w-[1000px] max-h-[90vh] overflow-y-auto'>
 					<DialogHeader>
 						<DialogTitle>Tabs configuration</DialogTitle>
 						<DialogDescription>
@@ -263,16 +250,19 @@ export function ShowTabsEditor({
 					</DialogHeader>
 
 					<div className='space-y-6 py-4'>
-						<div className='flex items-center space-x-2'>
-							<Checkbox
+						<Field orientation='horizontal'>
+							<FieldContent>
+								<FieldLabel htmlFor='showTabs'>Show tabs</FieldLabel>
+								<FieldDescription>
+									Display tabs to organize content into multiple sections.
+								</FieldDescription>
+							</FieldContent>
+							<Switch
 								id='showTabs'
 								checked={showTabs}
 								onCheckedChange={v => setShowTabs(v === true)}
 							/>
-							<Label htmlFor='showTabs' className='cursor-pointer'>
-								Show tabs
-							</Label>
-						</div>
+						</Field>
 
 						<div className='space-y-2'>
 							<div className='flex items-center justify-between'>
@@ -303,8 +293,6 @@ export function ShowTabsEditor({
 													key={i}
 													tab={tab}
 													index={i}
-													isSelected={selectedIndex === i}
-													onSelect={() => setSelectedIndex(i)}
 													onEdit={() =>
 														setEditingTab({
 															index: i,
@@ -378,46 +366,70 @@ function EditTabModal({
 	onSave: (label: string, showLabel: string, description: string) => void
 }) {
 	const [l, setL] = useState(label)
-	const [s, setS] = useState(showLabel)
+	const [showHeading, setShowHeading] = useState(!!showLabel)
 	const [d, setD] = useState(description)
 	useEffect(() => {
 		if (open) {
 			setL(label)
-			setS(showLabel)
+			setShowHeading(!!showLabel)
 			setD(description)
 		}
 	}, [open, label, showLabel, description])
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-lg'>
 				<DialogHeader>
 					<DialogTitle>Edit tab</DialogTitle>
-					<DialogDescription>Tab label and card heading.</DialogDescription>
+					<DialogDescription>
+						Configure tab label, heading, and description.
+					</DialogDescription>
 				</DialogHeader>
-				<div className='grid gap-4 py-4'>
+				<div className='grid gap-6 py-4'>
+					{/* Tab Label */}
 					<div className='grid gap-2'>
-						<Label>Tab label</Label>
-						<Input
-							value={l}
-							onChange={e => setL(e.target.value)}
-							placeholder='e.g. Overview'
-						/>
+						<Label htmlFor='tab-label'>Tab label</Label>
+						<InputGroup>
+							<InputGroupAddon align='inline-start'>
+								<Tag className='h-4 w-4' />
+							</InputGroupAddon>
+							<InputGroupInput
+								id='tab-label'
+								value={l}
+								onChange={e => setL(e.target.value)}
+								placeholder='e.g. Overview'
+							/>
+						</InputGroup>
 					</div>
-					<div className='grid gap-2'>
-						<Label>Card heading (showLabel)</Label>
-						<Input
-							value={s}
-							onChange={e => setS(e.target.value)}
-							placeholder='Heading in card'
+
+					{/* Show Heading Toggle */}
+					<Field orientation='horizontal'>
+						<FieldContent>
+							<FieldLabel htmlFor='showHeading'>Show card heading</FieldLabel>
+							<FieldDescription>
+								Display the tab label as a heading in the card content.
+							</FieldDescription>
+						</FieldContent>
+						<Switch
+							id='showHeading'
+							checked={showHeading}
+							onCheckedChange={setShowHeading}
 						/>
-					</div>
+					</Field>
+
+					{/* Description */}
 					<div className='grid gap-2'>
-						<Label>Description (optional)</Label>
-						<Input
-							value={d}
-							onChange={e => setD(e.target.value)}
-							placeholder='Short description'
-						/>
+						<Label htmlFor='tab-description'>Description (optional)</Label>
+						<InputGroup>
+							<InputGroupAddon align='inline-start'>
+								<FileText className='h-4 w-4' />
+							</InputGroupAddon>
+							<InputGroupInput
+								id='tab-description'
+								value={d}
+								onChange={e => setD(e.target.value)}
+								placeholder='Short description'
+							/>
+						</InputGroup>
 					</div>
 				</div>
 				<DialogFooter>
@@ -426,7 +438,7 @@ function EditTabModal({
 					</Button>
 					<Button
 						onClick={() => {
-							onSave(l || 'Tab', s || l, d)
+							onSave(l || 'Tab', showHeading ? l : '', d)
 							onOpenChange(false)
 						}}
 					>

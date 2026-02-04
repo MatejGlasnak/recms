@@ -28,6 +28,8 @@ export interface ShowGroup {
 	columnItems?: ShowItem[][]
 	/** Flat list of items with colspan; used when present for grid layout. */
 	items?: ShowItem[]
+	/** Whether to show the label in the UI (default true). */
+	showLabel?: boolean
 }
 
 export interface ShowTab {
