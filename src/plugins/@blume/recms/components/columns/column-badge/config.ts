@@ -55,6 +55,7 @@ export const columnBadgeConfig: BlockFieldConfig = {
 					type: 'switch',
 					label: 'Sortable',
 					default: true,
+					comment: 'Allow users to sort table data by this column',
 					span: 3
 				},
 				{
@@ -62,6 +63,7 @@ export const columnBadgeConfig: BlockFieldConfig = {
 					type: 'switch',
 					label: 'Visible by Default',
 					default: true,
+					comment: 'Show this column when the table first loads',
 					span: 3
 				}
 			]

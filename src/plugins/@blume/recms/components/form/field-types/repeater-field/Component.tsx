@@ -193,7 +193,7 @@ export function RepeaterField({
 								{expandedItems.has(index) && (
 									<CardContent className='p-4 pt-0'>
 										<div className='grid grid-cols-12 gap-4'>
-											{field.form.fields.map(subField => (
+											{field.form?.fields.map(subField => (
 												<FormField
 													key={subField.name}
 													field={subField}

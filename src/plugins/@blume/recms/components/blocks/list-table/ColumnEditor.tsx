@@ -130,7 +130,7 @@ export function ColumnEditor({ value, onChange, field }: ColumnEditorProps) {
 		<div className='space-y-4'>
 			<div className='flex items-center justify-between'>
 				{field?.label && (
-					<Label className='text-base font-semibold'>
+					<Label className='text-sm font-semibold'>
 						{field.label}
 						{field.required && <span className='text-destructive ml-1'>*</span>}
 					</Label>

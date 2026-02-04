@@ -27,9 +27,10 @@ export const columnNumberConfig: BlockFieldConfig = {
 					type: 'dropdown',
 					label: 'Format',
 					options: [
-						{ label: 'Default', value: '' },
+						{ label: 'Default', value: 'default' },
 						{ label: 'Currency', value: 'currency' }
 					],
+					default: 'default',
 					span: 3
 				},
 				{
@@ -52,6 +53,7 @@ export const columnNumberConfig: BlockFieldConfig = {
 					type: 'switch',
 					label: 'Sortable',
 					default: true,
+					comment: 'Allow users to sort table data by this column',
 					span: 3
 				},
 				{
@@ -59,6 +61,7 @@ export const columnNumberConfig: BlockFieldConfig = {
 					type: 'switch',
 					label: 'Visible by Default',
 					default: true,
+					comment: 'Show this column when the table first loads',
 					span: 3
 				}
 			]

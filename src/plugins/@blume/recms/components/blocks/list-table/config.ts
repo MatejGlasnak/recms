@@ -4,10 +4,26 @@ import { ColumnEditor } from './ColumnEditor'
 export const listTableConfig: BlockFieldConfig = {
 	fields: [
 		{
-			name: 'general',
+			name: 'header',
 			type: 'group',
-			label: 'General Settings',
-			columns: 12,
+			label: 'Header Settings',
+			columns: 6,
+			fields: [
+				{
+					name: 'allowCreate',
+					type: 'switch',
+					label: 'Allow Create New',
+					default: false,
+					comment: 'Show "Create New" button in the list page header',
+					span: 3
+				}
+			]
+		},
+		{
+			name: 'table',
+			type: 'group',
+			label: 'Table Settings',
+			columns: 6,
 			fields: [
 				{
 					name: 'rowClickAction',
@@ -20,18 +36,26 @@ export const listTableConfig: BlockFieldConfig = {
 					],
 					default: 'none',
 					comment: 'Action to perform when a user clicks on a table row',
-					span: 12
+					span: 6
 				}
 			]
 		},
 		{
-			name: 'columns',
-			type: 'custom',
-			label: 'Columns',
-			span: 'full',
-			renderer: ColumnEditor,
-			default: [],
-			comment: 'Configure table columns, their display types, and sorting behavior'
+			name: 'columnsGroup',
+			type: 'group',
+			label: 'Columns Settings',
+			columns: 12,
+			fields: [
+				{
+					name: 'columns',
+					type: 'custom',
+					label: 'Table Columns',
+					span: 12,
+					renderer: ColumnEditor,
+					default: [],
+					comment: 'Configure table columns, their display types, and sorting behavior'
+				}
+			]
 		}
 	]
 }
