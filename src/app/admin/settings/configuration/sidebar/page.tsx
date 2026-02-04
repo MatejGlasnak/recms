@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { usePageSetup } from '@/lib/contexts/page-context'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -18,20 +18,20 @@ export default function SidebarConfigPage() {
 
 	const { data: fetchedConfig, isLoading } = useSidebarConfigQuery()
 	const updateMutation = useUpdateSidebarConfig()
-	
+
 	const [config, setConfig] = useState<SidebarConfig>({ groups: [] })
 	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set())
 	const hasSyncedRef = useRef(false)
-	
+
 	// Initialize local config from fetched data once
-	 
 	useEffect(() => {
 		if (fetchedConfig && !hasSyncedRef.current) {
 			hasSyncedRef.current = true
-			setConfig(fetchedConfig)
-			setExpandedGroups(new Set(fetchedConfig.groups.map(g => g.id)))
+			queueMicrotask(() => {
+				setConfig(fetchedConfig)
+				setExpandedGroups(new Set(fetchedConfig.groups.map(g => g.id)))
+			})
 		}
-		// Dependencies intentionally minimal - we only want to sync once on initial load
 	}, [fetchedConfig])
 
 	const addGroup = () => {

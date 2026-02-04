@@ -1,5 +1,19 @@
 // @blume/recms - Public API
-// Types
+
+// ============================================
+// CORE EXPORTS (New Architecture)
+// ============================================
+
+// Core: Providers, Registries, Config
+export * from './core'
+
+// Pages: Main public API
+export * from './pages'
+
+// ============================================
+// TYPES
+// ============================================
+
 export type {
 	FilterConfig,
 	ColumnConfig,
@@ -11,7 +25,10 @@ export type {
 	LegacyListConfig
 } from './types'
 
-// Hooks
+// ============================================
+// HOOKS
+// ============================================
+
 export {
 	useListConfig,
 	useUpdateListConfig,
@@ -21,60 +38,37 @@ export {
 	useUpdatePageConfig
 } from './hooks'
 
-// Utils
+// ============================================
+// UTILITIES
+// ============================================
+
 export { formatHeader, getPageNumbers, buildListFilters } from './utils'
 
-// UI
-export { EditableWrapper } from './components/ui/EditableWrapper'
+// ============================================
+// COMPONENTS (Tree-shakeable)
+// ============================================
 
-// Registry
+// Blocks
 export {
-	BlockRegistryProvider,
-	useBlockRegistry,
-	useRegisterBlock,
-	useBlock,
-	FieldRegistryProvider,
-	useFieldRegistry,
-	useRegisterField,
-	useField
-} from './components/registry'
-export type {
-	BlockDefinition,
-	BlockComponentProps,
-	BlockFieldConfig,
-	FieldDefinition,
-	TriggerConfig,
-	PresetConfig,
-	TabDefinition,
-	FieldTypeDefinition,
-	FieldComponentProps
-} from './components/registry'
+	ListHeader,
+	listHeaderConfig,
+	ListFilters,
+	listFiltersConfig,
+	ListTable,
+	listTableConfig,
+	ListPagination,
+	listPaginationConfig,
+	ShowHeader,
+	showHeaderConfig,
+	ShowContent,
+	showContentConfig,
+	Grid,
+	gridConfig,
+	Tabs,
+	tabsConfig
+} from './blocks'
 
-// Form components
-export { FormModal, FormField } from './components/form'
-export {
-	TextField,
-	TextareaField,
-	DropdownField,
-	CheckboxField,
-	NumberField,
-	RepeaterField,
-	SliderField
-} from './components/form/field-types'
-
-// Filter components (new structure)
-export {
-	FilterInput,
-	filterInputConfig,
-	FilterSelect,
-	filterSelectConfig,
-	FilterCombobox,
-	filterComboboxConfig,
-	FilterCheckbox,
-	filterCheckboxConfig
-} from './components/filters'
-
-// Column components (new structure)
+// Columns
 export {
 	ColumnText,
 	columnTextConfig,
@@ -88,29 +82,46 @@ export {
 	columnBadgeConfig,
 	ColumnJson,
 	columnJsonConfig
-} from './components/columns'
+} from './columns'
 
-// Block components
+// Filters
 export {
-	ListHeader,
-	listHeaderConfig,
-	ListFilters,
-	listFiltersConfig,
-	ListTable,
-	listTableConfig,
-	ListPagination,
-	listPaginationConfig,
-	ShowHeader,
-	showHeaderConfig,
-	ShowContent,
-	showContentConfig
-} from './components/blocks'
+	FilterInput,
+	filterInputConfig,
+	FilterSelect,
+	filterSelectConfig,
+	FilterCombobox,
+	filterComboboxConfig,
+	FilterCheckbox,
+	filterCheckboxConfig
+} from './filters'
 
-// Pages (new block-based)
-export { ListPage } from './components/pages/list'
-export { ShowPageNew } from './pages/resources/ShowPageNew'
+// Form fields
+export {
+	TextField,
+	TextareaField,
+	DropdownField,
+	CheckboxField,
+	NumberField,
+	RepeaterField,
+	SliderField,
+	SwitchField
+} from './fields'
 
-// Legacy pages (for backward compatibility)
-export { ShowPage } from './pages/resources/ShowPage'
-export { ShowPageLayout } from './components/show/ShowPageLayout'
-export { ShowFieldsEditor } from './components/show/ShowFieldsEditor'
+// UI components
+export {
+	BlockRenderer,
+	EditableWrapper,
+	ConfigEmptyState,
+	PageLoading,
+	PageError,
+	InlineError,
+	FormModal,
+	FormField
+} from './ui'
+
+// ============================================
+// LEGACY EXPORTS (Backward Compatibility)
+// ============================================
+
+// No legacy exports needed - all components are now in blocks/

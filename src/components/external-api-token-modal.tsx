@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-	getExternalApiBearerToken,
 	setExternalApiBearerToken,
 	removeExternalApiBearerToken
 } from '@/lib/constants/external-api-token'
@@ -26,12 +25,6 @@ interface ExternalApiTokenModalProps {
 
 export function ExternalApiTokenModal({ open, onOpenChange }: ExternalApiTokenModalProps) {
 	const [token, setToken] = useState('')
-
-	useEffect(() => {
-		if (open) {
-			setToken(getExternalApiBearerToken() ?? '')
-		}
-	}, [open])
 
 	const handleSave = () => {
 		const trimmed = token.trim()

@@ -10,7 +10,8 @@ export function ThemeToggle() {
 	const [mounted, setMounted] = useState(false)
 
 	useEffect(() => {
-		setMounted(true)
+		// Use queueMicrotask to avoid setState in effect warning
+		queueMicrotask(() => setMounted(true))
 	}, [])
 
 	if (!mounted) {

@@ -56,14 +56,20 @@ export async function GET(
 							order: 0
 						},
 						{
-							id: 'content-1',
-							slug: 'show-content',
+							id: 'tabs-1',
+							slug: 'tabs',
 							config: {
-								columns: '2',
-								fields: [],
-								showCard: true,
-								cardTitle: '',
-								cardDescription: ''
+								tabs: [
+									{
+										id: 'general',
+										label: 'General',
+										blocks: []
+									}
+								],
+								defaultTab: 'general',
+								orientation: 'horizontal',
+								variant: 'default',
+								registryType: 'field'
 							},
 							order: 1
 						}

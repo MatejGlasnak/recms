@@ -32,6 +32,21 @@ export interface ShowGroup {
 	showLabel?: boolean
 }
 
+export interface ShowFieldConfig {
+	id: string
+	slug: string
+	columnSpan?: number
+	config: Record<string, unknown>
+}
+
+export interface ShowTabFieldsConfig extends Record<string, unknown> {
+	columns?: number
+	columnsMobile?: number
+	columnsTablet?: number
+	columnsDesktop?: number
+	fields?: ShowFieldConfig[]
+}
+
 export interface ShowTab {
 	/** Tab trigger label. */
 	label: string
@@ -39,7 +54,10 @@ export interface ShowTab {
 	showLabel?: string
 	/** Optional description below the card heading. */
 	description?: string
-	groups: ShowGroup[]
+	/** @deprecated Use fields instead. Legacy group-based layout. */
+	groups?: ShowGroup[]
+	/** Grid-like field configuration (preferred over groups). */
+	fields?: ShowTabFieldsConfig
 }
 
 export interface ShowConfig {
