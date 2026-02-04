@@ -1,7 +1,13 @@
 'use client'
 
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import {
+	Field,
+	FieldContent,
+	FieldLabel,
+	FieldDescription,
+	FieldError
+} from '@/components/ui/field'
 import type { FieldComponentProps } from '../../../registry/FieldRegistry'
 
 export function CheckboxField({
@@ -15,31 +21,28 @@ export function CheckboxField({
 	const checked = Boolean(value)
 
 	return (
-		<div className='space-y-2'>
-			{field.commentAbove && (
-				<p className='text-sm text-muted-foreground'>{field.commentAbove}</p>
-			)}
-			<div className='flex items-center space-x-2'>
-				<Checkbox
-					id={field.name}
-					checked={checked}
-					onCheckedChange={onChange}
-					disabled={disabled || field.disabled || readOnly || field.readOnly}
-					className={field.cssClass}
-					{...field.attributes}
-				/>
+		<Field orientation='horizontal' data-invalid={!!error}>
+			<Checkbox
+				id={field.name}
+				checked={checked}
+				onCheckedChange={onChange}
+				disabled={disabled || field.disabled || readOnly || field.readOnly}
+				className={field.cssClass}
+				aria-invalid={!!error}
+				{...field.attributes}
+			/>
+			<FieldContent>
 				{field.label && (
-					<Label
-						htmlFor={field.name}
-						className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-					>
+					<FieldLabel htmlFor={field.name}>
 						{field.label}
 						{field.required && <span className='text-destructive ml-1'>*</span>}
-					</Label>
+					</FieldLabel>
 				)}
-			</div>
-			{field.comment && <p className='text-sm text-muted-foreground'>{field.comment}</p>}
-			{error && <p className='text-sm text-destructive'>{error}</p>}
-		</div>
+				{(field.commentAbove || field.comment) && (
+					<FieldDescription>{field.commentAbove || field.comment}</FieldDescription>
+				)}
+				{error && <FieldError>{error}</FieldError>}
+			</FieldContent>
+		</Field>
 	)
 }

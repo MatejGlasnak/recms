@@ -1,6 +1,6 @@
 'use client'
 
-import { Label } from '@/components/ui/label'
+import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import {
 	Select,
 	SelectContent,
@@ -21,22 +21,20 @@ export function DropdownField({
 	const options = field.options ?? []
 
 	return (
-		<div className='space-y-2'>
+		<Field data-invalid={!!error}>
 			{field.label && (
-				<Label htmlFor={field.name}>
+				<FieldLabel htmlFor={field.name}>
 					{field.label}
 					{field.required && <span className='text-destructive ml-1'>*</span>}
-				</Label>
+				</FieldLabel>
 			)}
-			{field.commentAbove && (
-				<p className='text-sm text-muted-foreground'>{field.commentAbove}</p>
-			)}
+			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}
 			<Select
 				value={String(value ?? '')}
 				onValueChange={onChange}
 				disabled={disabled || field.disabled || readOnly || field.readOnly}
 			>
-				<SelectTrigger id={field.name} className={field.cssClass}>
+				<SelectTrigger id={field.name} className={field.cssClass} aria-invalid={!!error}>
 					<SelectValue placeholder={field.placeholder ?? 'Select an option'} />
 				</SelectTrigger>
 				<SelectContent>
@@ -47,8 +45,8 @@ export function DropdownField({
 					))}
 				</SelectContent>
 			</Select>
-			{field.comment && <p className='text-sm text-muted-foreground'>{field.comment}</p>}
-			{error && <p className='text-sm text-destructive'>{error}</p>}
-		</div>
+			{field.comment && <FieldDescription>{field.comment}</FieldDescription>}
+			{error && <FieldError>{error}</FieldError>}
+		</Field>
 	)
 }

@@ -31,28 +31,36 @@ const FieldContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 )
 FieldContent.displayName = 'FieldContent'
 
-const FieldLabel = React.forwardRef<
-	HTMLLabelElement,
-	React.LabelHTMLAttributes<HTMLLabelElement>
->(({ className, ...props }, ref) => {
-	return (
-		<label
-			ref={ref}
-			className={cn('text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70', className)}
-			{...props}
-		/>
-	)
-})
+const FieldLabel = React.forwardRef<HTMLLabelElement, React.LabelHTMLAttributes<HTMLLabelElement>>(
+	({ className, ...props }, ref) => {
+		return (
+			<label
+				ref={ref}
+				className={cn(
+					'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+					className
+				)}
+				{...props}
+			/>
+		)
+	}
+)
 FieldLabel.displayName = 'FieldLabel'
 
 const FieldDescription = React.forwardRef<
 	HTMLParagraphElement,
 	React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {
-	return (
-		<p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
-	)
+	return <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
 })
 FieldDescription.displayName = 'FieldDescription'
 
-export { Field, FieldContent, FieldLabel, FieldDescription }
+const FieldError = React.forwardRef<
+	HTMLParagraphElement,
+	React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => {
+	return <p ref={ref} className={cn('text-sm text-destructive', className)} {...props} />
+})
+FieldError.displayName = 'FieldError'
+
+export { Field, FieldContent, FieldLabel, FieldDescription, FieldError }

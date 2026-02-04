@@ -16,7 +16,9 @@ import type { BlockComponentProps } from '../../registry/BlockRegistry'
 interface FilterComboboxConfig {
 	label?: string
 	field?: string
+	operator?: 'eq' | 'ne' | 'in' | 'nin' | 'contains'
 	placeholder?: string
+	defaultValue?: string
 	options?: { label: string; value: string }[]
 	multiple?: boolean
 }
@@ -139,6 +141,9 @@ export function FilterCombobox({
 
 	const id = blockConfig.id
 
+	// Get the current filter value
+	const currentValue = typeof filterValue === 'function' ? filterValue(field) : filterValue
+
 	// Handle filter value changes
 	const handleChange = (value: unknown) => {
 		if (onFilterChange && typeof onFilterChange === 'function') {
@@ -147,7 +152,7 @@ export function FilterCombobox({
 	}
 
 	if (multiple) {
-		const arrayValue = Array.isArray(filterValue) ? filterValue : []
+		const arrayValue = Array.isArray(currentValue) ? currentValue : []
 		return (
 			<ComboboxFilterMultiple
 				id={id}
@@ -160,7 +165,7 @@ export function FilterCombobox({
 			/>
 		)
 	}
-	const stringValue = typeof filterValue === 'string' ? filterValue : ''
+	const stringValue = typeof currentValue === 'string' ? currentValue : ''
 	return (
 		<ComboboxFilterSingle
 			id={id}

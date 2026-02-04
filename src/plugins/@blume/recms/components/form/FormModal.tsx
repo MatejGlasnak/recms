@@ -138,7 +138,7 @@ export function FormModal({
 	}
 
 	const renderFields = (fields: typeof fieldConfig.fields) => (
-		<div className='grid grid-cols-12 gap-4'>
+		<div className='grid gap-6'>
 			{fields
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 				.map(field => {
@@ -146,7 +146,7 @@ export function FormModal({
 					if (field.renderer) {
 						const CustomRenderer = field.renderer
 						return (
-							<div key={field.name} className={`col-span-12 ${field.cssClass ?? ''}`}>
+							<div key={field.name} className={field.cssClass ?? ''}>
 								{field.label && (
 									<label className='block text-sm font-medium mb-2'>
 										{field.label}
@@ -191,7 +191,7 @@ export function FormModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
+			<DialogContent className='sm:max-w-4xl'>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
@@ -203,35 +203,39 @@ export function FormModal({
 					</div>
 				)}
 
-				{hasTabs && fieldConfig.tabs ? (
-					<Tabs defaultValue={fieldConfig.tabs[0]?.name} className='w-full'>
-						<TabsList className='w-full justify-start'>
+				<div className='py-4'>
+					{hasTabs && fieldConfig.tabs ? (
+						<Tabs defaultValue={fieldConfig.tabs[0]?.name} className='w-full'>
+							<TabsList className='w-full justify-start'>
+								{fieldConfig.tabs.map(tab => (
+									<TabsTrigger key={tab.name} value={tab.name}>
+										{tab.label}
+									</TabsTrigger>
+								))}
+							</TabsList>
 							{fieldConfig.tabs.map(tab => (
-								<TabsTrigger key={tab.name} value={tab.name}>
-									{tab.label}
-								</TabsTrigger>
+								<TabsContent key={tab.name} value={tab.name} className='pt-6'>
+									{renderFields(fieldsByTab.get(tab.name) ?? [])}
+								</TabsContent>
 							))}
-						</TabsList>
-						{fieldConfig.tabs.map(tab => (
-							<TabsContent key={tab.name} value={tab.name} className='space-y-4 pt-4'>
-								{renderFields(fieldsByTab.get(tab.name) ?? [])}
-							</TabsContent>
-						))}
-					</Tabs>
-				) : (
-					<div className='space-y-4'>{renderFields(fieldsByTab.get('_all') ?? [])}</div>
-				)}
-
-				<DialogFooter className={onDelete ? 'justify-between' : ''}>
-					{onDelete && (
-						<Button
-							variant='destructive'
-							onClick={handleDelete}
-							disabled={isSubmitting || isDeleting}
-						>
-							{isDeleting ? 'Deleting...' : deleteLabel}
-						</Button>
+						</Tabs>
+					) : (
+						renderFields(fieldsByTab.get('_all') ?? [])
 					)}
+				</div>
+
+				<DialogFooter className='!justify-between'>
+					<div className='flex gap-2'>
+						{onDelete && (
+							<Button
+								variant='destructive'
+								onClick={handleDelete}
+								disabled={isSubmitting || isDeleting}
+							>
+								{isDeleting ? 'Deleting...' : deleteLabel}
+							</Button>
+						)}
+					</div>
 					<div className='flex gap-2'>
 						<Button
 							variant='outline'

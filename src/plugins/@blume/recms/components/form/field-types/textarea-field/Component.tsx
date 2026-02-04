@@ -1,7 +1,7 @@
 'use client'
 
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
+import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import type { FieldComponentProps } from '../../../registry/FieldRegistry'
 import { cn } from '@/lib/utils'
 
@@ -22,16 +22,14 @@ export function TextareaField({
 	}
 
 	return (
-		<div className='space-y-2'>
+		<Field data-invalid={!!error}>
 			{field.label && (
-				<Label htmlFor={field.name}>
+				<FieldLabel htmlFor={field.name}>
 					{field.label}
 					{field.required && <span className='text-destructive ml-1'>*</span>}
-				</Label>
+				</FieldLabel>
 			)}
-			{field.commentAbove && (
-				<p className='text-sm text-muted-foreground'>{field.commentAbove}</p>
-			)}
+			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}
 			<Textarea
 				id={field.name}
 				name={field.name}
@@ -42,10 +40,11 @@ export function TextareaField({
 				readOnly={readOnly || field.readOnly}
 				autoFocus={field.autoFocus}
 				className={cn(field.size && sizeClasses[field.size], field.cssClass)}
+				aria-invalid={!!error}
 				{...field.attributes}
 			/>
-			{field.comment && <p className='text-sm text-muted-foreground'>{field.comment}</p>}
-			{error && <p className='text-sm text-destructive'>{error}</p>}
-		</div>
+			{field.comment && <FieldDescription>{field.comment}</FieldDescription>}
+			{error && <FieldError>{error}</FieldError>}
+		</Field>
 	)
 }

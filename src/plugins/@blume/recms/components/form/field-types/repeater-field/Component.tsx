@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { Plus, Trash2, GripVertical, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
 import type { FieldComponentProps } from '../../../registry/FieldRegistry'
 import { FormField } from '../../FormField'
@@ -88,31 +89,27 @@ export function RepeaterField({
 
 	if (!field.form?.fields) {
 		return (
-			<div className='space-y-2'>
+			<Field data-invalid>
 				{field.label && (
-					<label className='block text-sm font-medium'>
+					<FieldLabel>
 						{field.label}
 						{field.required && <span className='text-destructive ml-1'>*</span>}
-					</label>
+					</FieldLabel>
 				)}
-				<p className='text-sm text-destructive'>
-					Repeater field requires a form configuration
-				</p>
-			</div>
+				<FieldError>Repeater field requires a form configuration</FieldError>
+			</Field>
 		)
 	}
 
 	return (
-		<div className='space-y-2'>
+		<Field data-invalid={!!error}>
 			{field.label && (
-				<label className='block text-sm font-medium'>
+				<FieldLabel>
 					{field.label}
 					{field.required && <span className='text-destructive ml-1'>*</span>}
-				</label>
+				</FieldLabel>
 			)}
-			{field.commentAbove && (
-				<p className='text-sm text-muted-foreground'>{field.commentAbove}</p>
-			)}
+			{field.commentAbove && <FieldDescription>{field.commentAbove}</FieldDescription>}
 
 			<div className='space-y-4'>
 				{items.length === 0 ? (
@@ -233,8 +230,8 @@ export function RepeaterField({
 				</Button>
 			</div>
 
-			{field.comment && <p className='text-sm text-muted-foreground'>{field.comment}</p>}
-			{error && <p className='text-sm text-destructive'>{error}</p>}
-		</div>
+			{field.comment && <FieldDescription>{field.comment}</FieldDescription>}
+			{error && <FieldError>{error}</FieldError>}
+		</Field>
 	)
 }

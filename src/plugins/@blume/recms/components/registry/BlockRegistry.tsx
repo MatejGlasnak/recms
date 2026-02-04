@@ -63,6 +63,10 @@ export interface FieldDefinition {
 	form?: BlockFieldConfig
 	minItems?: number
 	maxItems?: number
+	// For number/slider fields
+	min?: number
+	max?: number
+	step?: number
 	// Custom renderer for complex fields
 	renderer?: React.ComponentType<{
 		value: unknown

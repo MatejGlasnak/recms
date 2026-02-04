@@ -1,34 +1,39 @@
 import type { BlockFieldConfig } from '../../registry'
-import { SliderField } from './SliderField'
 
 export const gridConfig: BlockFieldConfig = {
 	fields: [
 		{
 			name: 'columnsMobile',
-			type: 'custom',
+			type: 'slider',
 			label: 'Columns (Mobile)',
 			default: 1,
-			comment: 'Number of columns on mobile devices (1-12)',
-			span: 'full',
-			renderer: SliderField
+			min: 1,
+			max: 12,
+			step: 1,
+			comment: 'Number of columns on mobile devices',
+			span: 'full'
 		},
 		{
 			name: 'columnsTablet',
-			type: 'custom',
+			type: 'slider',
 			label: 'Columns (Tablet)',
 			default: 3,
-			comment: 'Number of columns on tablet devices (1-12)',
-			span: 'full',
-			renderer: SliderField
+			min: 1,
+			max: 12,
+			step: 1,
+			comment: 'Number of columns on tablet devices',
+			span: 'full'
 		},
 		{
 			name: 'columnsDesktop',
-			type: 'custom',
+			type: 'slider',
 			label: 'Columns (Desktop)',
 			default: 6,
-			comment: 'Number of columns on desktop devices (1-12)',
-			span: 'full',
-			renderer: SliderField
+			min: 1,
+			max: 12,
+			step: 1,
+			comment: 'Number of columns on desktop devices',
+			span: 'full'
 		}
 	]
 }

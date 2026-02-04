@@ -7,6 +7,8 @@ import type { BlockComponentProps } from '../../registry/BlockRegistry'
 interface FilterCheckboxConfig {
 	label?: string
 	field?: string
+	operator?: 'eq' | 'ne'
+	defaultValue?: boolean
 }
 
 export function FilterCheckbox({
@@ -21,6 +23,9 @@ export function FilterCheckbox({
 
 	const id = blockConfig.id
 
+	// Get the current filter value
+	const currentValue = typeof filterValue === 'function' ? filterValue(field) : filterValue
+
 	// Handle filter value changes
 	const handleChange = (value: boolean) => {
 		if (onFilterChange && typeof onFilterChange === 'function') {
@@ -32,7 +37,7 @@ export function FilterCheckbox({
 		<div className='flex items-center gap-2 h-10 w-full'>
 			<Checkbox
 				id={id}
-				checked={Boolean(filterValue)}
+				checked={Boolean(currentValue)}
 				onCheckedChange={checked => handleChange(!!checked)}
 				disabled={editMode}
 			/>

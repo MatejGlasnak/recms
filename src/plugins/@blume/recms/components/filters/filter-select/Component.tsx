@@ -13,7 +13,9 @@ import type { BlockComponentProps } from '../../registry/BlockRegistry'
 interface FilterSelectConfig {
 	label?: string
 	field?: string
+	operator?: 'eq' | 'ne' | 'in' | 'nin'
 	placeholder?: string
+	defaultValue?: string
 	options?: { label: string; value: string }[]
 }
 
@@ -31,6 +33,9 @@ export function FilterSelect({
 
 	const id = blockConfig.id
 
+	// Get the current filter value
+	const currentValue = typeof filterValue === 'function' ? filterValue(field) : filterValue
+
 	// Handle filter value changes
 	const handleChange = (value: string) => {
 		if (onFilterChange && typeof onFilterChange === 'function') {
@@ -44,7 +49,7 @@ export function FilterSelect({
 				{label}
 			</Label>
 			<Select
-				value={String(filterValue ?? '')}
+				value={String(currentValue ?? '')}
 				onValueChange={handleChange}
 				disabled={editMode}
 			>

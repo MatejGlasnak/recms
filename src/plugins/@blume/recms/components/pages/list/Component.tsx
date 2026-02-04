@@ -33,6 +33,7 @@ import { DropdownField } from '../../form/field-types/dropdown-field'
 import { CheckboxField } from '../../form/field-types/checkbox-field'
 import { NumberField } from '../../form/field-types/number-field'
 import { RepeaterField } from '../../form/field-types/repeater-field'
+import { SliderField } from '../../form/field-types/slider-field'
 
 export interface ListPageContainerProps {
 	resourceId?: string
@@ -97,6 +98,7 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 		registerField({ type: 'checkbox', Component: CheckboxField })
 		registerField({ type: 'number', Component: NumberField })
 		registerField({ type: 'repeater', Component: RepeaterField })
+		registerField({ type: 'slider', Component: SliderField })
 	}, [registerField])
 
 	// Register blocks

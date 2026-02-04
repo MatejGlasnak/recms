@@ -20,6 +20,22 @@ export const filterComboboxConfig: BlockFieldConfig = {
 			span: 'full'
 		},
 		{
+			name: 'operator',
+			type: 'dropdown',
+			label: 'Filter Operator',
+			placeholder: 'Select operator...',
+			default: 'in',
+			comment: 'How to compare the filter value',
+			span: 'full',
+			options: [
+				{ label: 'Equals', value: 'eq' },
+				{ label: 'Not Equals', value: 'ne' },
+				{ label: 'In List', value: 'in' },
+				{ label: 'Not In List', value: 'nin' },
+				{ label: 'Contains', value: 'contains' }
+			]
+		},
+		{
 			name: 'placeholder',
 			type: 'text',
 			label: 'Placeholder',
@@ -32,6 +48,14 @@ export const filterComboboxConfig: BlockFieldConfig = {
 			type: 'checkbox',
 			label: 'Allow Multiple Selections',
 			default: false,
+			span: 'full'
+		},
+		{
+			name: 'defaultValue',
+			type: 'text',
+			label: 'Default Value',
+			placeholder: 'e.g., tag1,tag2 (comma-separated for multiple)',
+			comment: 'Optional default value for the filter',
 			span: 'full'
 		},
 		{

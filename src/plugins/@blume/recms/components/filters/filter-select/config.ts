@@ -20,11 +20,34 @@ export const filterSelectConfig: BlockFieldConfig = {
 			span: 'full'
 		},
 		{
+			name: 'operator',
+			type: 'dropdown',
+			label: 'Filter Operator',
+			placeholder: 'Select operator...',
+			default: 'eq',
+			comment: 'How to compare the filter value',
+			span: 'full',
+			options: [
+				{ label: 'Equals', value: 'eq' },
+				{ label: 'Not Equals', value: 'ne' },
+				{ label: 'In List', value: 'in' },
+				{ label: 'Not In List', value: 'nin' }
+			]
+		},
+		{
 			name: 'placeholder',
 			type: 'text',
 			label: 'Placeholder',
 			placeholder: 'e.g., Select a status...',
 			comment: 'Optional placeholder text',
+			span: 'full'
+		},
+		{
+			name: 'defaultValue',
+			type: 'text',
+			label: 'Default Value',
+			placeholder: 'e.g., active',
+			comment: 'Optional default value for the filter',
 			span: 'full'
 		},
 		{

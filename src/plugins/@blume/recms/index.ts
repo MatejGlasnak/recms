@@ -58,7 +58,8 @@ export {
 	DropdownField,
 	CheckboxField,
 	NumberField,
-	RepeaterField
+	RepeaterField,
+	SliderField
 } from './components/form/field-types'
 
 // Filter components (new structure)

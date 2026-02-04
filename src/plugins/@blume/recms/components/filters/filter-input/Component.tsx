@@ -7,7 +7,9 @@ import type { BlockComponentProps } from '../../registry/BlockRegistry'
 interface FilterInputConfig {
 	label?: string
 	field?: string
+	operator?: 'eq' | 'ne' | 'contains' | 'startsWith' | 'endsWith'
 	placeholder?: string
+	defaultValue?: string
 }
 
 export function FilterInput({
@@ -22,6 +24,9 @@ export function FilterInput({
 	const placeholder = config.placeholder
 
 	const id = blockConfig.id
+
+	// Get the current filter value
+	const currentValue = typeof filterValue === 'function' ? filterValue(field) : filterValue
 
 	// Handle filter value changes
 	const handleChange = (value: string) => {
@@ -38,7 +43,7 @@ export function FilterInput({
 			<Input
 				id={id}
 				placeholder={placeholder || `Enter ${label.toLowerCase()}...`}
-				value={String(filterValue ?? '')}
+				value={String(currentValue ?? '')}
 				onChange={e => handleChange(e.target.value)}
 				className='h-10 w-full'
 				disabled={editMode}
