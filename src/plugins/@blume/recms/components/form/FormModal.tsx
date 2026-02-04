@@ -137,57 +137,80 @@ export function FormModal({
 		fieldsByTab.set('_all', fieldConfig.fields)
 	}
 
-	const renderFields = (fields: typeof fieldConfig.fields) => (
-		<div className='grid gap-6'>
-			{fields
-				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-				.map(field => {
-					// Use custom renderer if provided
-					if (field.renderer) {
-						const CustomRenderer = field.renderer
-						return (
-							<div key={field.name} className={field.cssClass ?? ''}>
-								{field.label && (
-									<label className='block text-sm font-medium mb-2'>
-										{field.label}
-										{field.required && (
-											<span className='text-destructive ml-1'>*</span>
-										)}
-									</label>
-								)}
-								<CustomRenderer
-									value={values[field.name]}
-									onChange={value => handleChange(field.name, value)}
-									field={field}
-								/>
-								{errors[field.name] && (
-									<p className='text-sm text-destructive mt-1'>
-										{errors[field.name]}
-									</p>
-								)}
-								{field.comment && (
-									<p className='text-sm text-muted-foreground mt-1'>
-										{field.comment}
-									</p>
-								)}
-							</div>
-						)
-					}
+	const getGridColsClass = (columns: number) => {
+		const colsMap: Record<number, string> = {
+			1: 'grid-cols-1',
+			2: 'grid-cols-2',
+			3: 'grid-cols-3',
+			4: 'grid-cols-4',
+			5: 'grid-cols-5',
+			6: 'grid-cols-6',
+			7: 'grid-cols-7',
+			8: 'grid-cols-8',
+			9: 'grid-cols-9',
+			10: 'grid-cols-10',
+			11: 'grid-cols-11',
+			12: 'grid-cols-12'
+		}
+		return colsMap[columns] || 'grid-cols-6'
+	}
 
-					// Use default FormField for standard types
-					return (
-						<FormField
-							key={field.name}
-							field={field}
-							value={values[field.name]}
-							onChange={value => handleChange(field.name, value)}
-							error={errors[field.name]}
-							allValues={values}
-						/>
-					)
-				})}
-		</div>
-	)
+	const renderField = (field: (typeof fieldConfig.fields)[0]): React.ReactNode => {
+		// Handle group fields
+		if (field.type === 'group' && field.fields) {
+			const columns = field.columns ?? 6
+			return (
+				<div key={field.name} className='space-y-3'>
+					{field.label && (
+						<h3 className='text-sm font-semibold text-muted-foreground'>
+							{field.label}
+						</h3>
+					)}
+					<div className={`grid ${getGridColsClass(columns)} gap-4`}>
+						{field.fields.map(nestedField => renderField(nestedField))}
+					</div>
+					{field.comment && (
+						<p className='text-sm text-muted-foreground'>{field.comment}</p>
+					)}
+				</div>
+			)
+		}
+
+		// Use custom renderer if provided
+		if (field.renderer) {
+			const CustomRenderer = field.renderer
+			return (
+				<div key={field.name} className={field.cssClass ?? ''}>
+					<CustomRenderer
+						value={values[field.name]}
+						onChange={value => handleChange(field.name, value)}
+						field={field}
+					/>
+					{errors[field.name] && (
+						<p className='text-sm text-destructive mt-1'>{errors[field.name]}</p>
+					)}
+				</div>
+			)
+		}
+
+		// Use default FormField for standard types
+		return (
+			<FormField
+				key={field.name}
+				field={field}
+				value={values[field.name]}
+				onChange={value => handleChange(field.name, value)}
+				error={errors[field.name]}
+				allValues={values}
+			/>
+		)
+	}
+
+	const renderFields = (fields: typeof fieldConfig.fields) => {
+		const sortedFields = fields.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+		return <div className='space-y-8'>{sortedFields.map(field => renderField(field))}</div>
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

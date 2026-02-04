@@ -32,7 +32,7 @@ export interface FieldDefinition {
 	name: string
 	type: string
 	label?: string
-	span?: 'auto' | 'left' | 'right' | 'row' | 'full'
+	span?: 'auto' | 'left' | 'right' | 'row' | 'full' | number
 	tab?: string
 	default?: unknown
 	placeholder?: string
@@ -67,6 +67,9 @@ export interface FieldDefinition {
 	min?: number
 	max?: number
 	step?: number
+	// For group fields
+	columns?: number
+	fields?: FieldDefinition[]
 	// Custom renderer for complex fields
 	renderer?: React.ComponentType<{
 		value: unknown

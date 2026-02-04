@@ -12,6 +12,7 @@ import {
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
 	SelectTrigger,
 	SelectValue
@@ -20,11 +21,13 @@ import type { BlockComponentProps } from '../../registry'
 import { useState } from 'react'
 import { FormModal } from '../../form/FormModal'
 import { listPaginationConfig } from './config'
+import { Field, FieldLabel } from '@/components/ui/field'
 
 export function ListPagination({
 	blockConfig,
 	editMode,
 	onConfigUpdate,
+	onDelete,
 	currentPage: externalCurrentPage,
 	pageSize: externalPageSize,
 	total: externalTotal,
@@ -37,11 +40,19 @@ export function ListPagination({
 
 	const config = blockConfig.config as {
 		pageSize?: number
-		pageSizeOptions?: number[]
+		pageSizeOptions?: string | number[]
 	}
 
-	const pageSizeValue = config.pageSize ?? 10
-	const pageSizeOptions = config.pageSizeOptions ?? [10, 25, 50, 100]
+	// Parse pageSizeOptions from string or array
+	const pageSizeOptions = (() => {
+		if (!config.pageSizeOptions) return [10, 25, 50, 100]
+		if (Array.isArray(config.pageSizeOptions)) return config.pageSizeOptions
+		// Parse comma-separated string
+		return config.pageSizeOptions
+			.split(',')
+			.map(s => parseInt(s.trim(), 10))
+			.filter(n => !isNaN(n))
+	})()
 
 	// Use external values if provided
 	const currentPage = externalCurrentPage ? (externalCurrentPage as number) : localCurrentPage
@@ -64,91 +75,104 @@ export function ListPagination({
 		setShowSettings(false)
 	}
 
+	const handleDelete = async () => {
+		if (onDelete && typeof onDelete === 'function') {
+			await onDelete()
+		}
+	}
+
 	return (
 		<>
 			<div
-				className='relative flex items-center justify-between mt-6'
+				className={`relative flex items-center justify-between mt-6 ${
+					editMode
+						? 'border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer p-3'
+						: ''
+				}`}
 				onClick={editMode ? () => setShowSettings(true) : undefined}
 			>
-				<div className='flex items-center gap-2'>
-					<span className='text-sm text-muted-foreground'>Rows per page:</span>
-					<Select
-						value={String(pageSize)}
-						onValueChange={value => handlePageSizeChange(Number(value))}
-						disabled={editMode}
-					>
-						<SelectTrigger className='h-9 w-[70px]'>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							{pageSizeOptions.map(size => (
-								<SelectItem key={size} value={String(size)}>
-									{size}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-					<span className='text-sm text-muted-foreground'>
-						Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to{' '}
-						{Math.min(currentPage * pageSize, total)} of {total} results
-					</span>
-				</div>
+				<span className='text-sm text-muted-foreground whitespace-nowrap'>
+					Showing {Math.min((currentPage - 1) * pageSize + 1, total)} to{' '}
+					{Math.min(currentPage * pageSize, total)} of {total} results
+				</span>
 
-				<Pagination>
-					<PaginationContent>
-						<PaginationItem>
-							<PaginationPrevious
-								onClick={e => {
-									if (editMode) return
-									e.stopPropagation()
-									handlePageChange(Math.max(1, currentPage - 1))
-								}}
-								className={
-									currentPage === 1 || editMode
-										? 'pointer-events-none opacity-50'
-										: 'cursor-pointer'
-								}
-							/>
-						</PaginationItem>
-						{[...Array(Math.min(5, totalPages))].map((_, i) => {
-							const page = i + 1
-							return (
-								<PaginationItem key={page}>
-									<PaginationLink
-										onClick={e => {
-											if (editMode) return
-											e.stopPropagation()
-											handlePageChange(page)
-										}}
-										isActive={currentPage === page}
-										className={editMode ? '' : 'cursor-pointer'}
-									>
-										{page}
-									</PaginationLink>
-								</PaginationItem>
-							)
-						})}
-						{totalPages > 5 && (
+				<div className='flex items-center justify-between gap-12'>
+					<Pagination>
+						<PaginationContent>
 							<PaginationItem>
-								<PaginationEllipsis />
+								<PaginationPrevious
+									onClick={e => {
+										if (editMode) return
+										e.stopPropagation()
+										handlePageChange(Math.max(1, currentPage - 1))
+									}}
+									className={
+										currentPage === 1 || editMode
+											? 'pointer-events-none opacity-50'
+											: 'cursor-pointer'
+									}
+								/>
 							</PaginationItem>
-						)}
-						<PaginationItem>
-							<PaginationNext
-								onClick={e => {
-									if (editMode) return
-									e.stopPropagation()
-									handlePageChange(Math.min(totalPages, currentPage + 1))
-								}}
-								className={
-									currentPage === totalPages || editMode
-										? 'pointer-events-none opacity-50'
-										: 'cursor-pointer'
-								}
-							/>
-						</PaginationItem>
-					</PaginationContent>
-				</Pagination>
+							{[...Array(Math.min(5, totalPages))].map((_, i) => {
+								const page = i + 1
+								return (
+									<PaginationItem key={page}>
+										<PaginationLink
+											onClick={e => {
+												if (editMode) return
+												e.stopPropagation()
+												handlePageChange(page)
+											}}
+											isActive={currentPage === page}
+											className={editMode ? '' : 'cursor-pointer'}
+										>
+											{page}
+										</PaginationLink>
+									</PaginationItem>
+								)
+							})}
+							{totalPages > 5 && (
+								<PaginationItem>
+									<PaginationEllipsis />
+								</PaginationItem>
+							)}
+							<PaginationItem>
+								<PaginationNext
+									onClick={e => {
+										if (editMode) return
+										e.stopPropagation()
+										handlePageChange(Math.min(totalPages, currentPage + 1))
+									}}
+									className={
+										currentPage === totalPages || editMode
+											? 'pointer-events-none opacity-50'
+											: 'cursor-pointer'
+									}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
+
+					<Field orientation='horizontal' className='w-fit'>
+						<Select
+							value={String(pageSize)}
+							onValueChange={value => handlePageSizeChange(Number(value))}
+						>
+							<SelectTrigger className='w-20' id='select-rows-per-page'>
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent align='start'>
+								<SelectGroup>
+									{pageSizeOptions.map(size => (
+										<SelectItem key={size} value={String(size)}>
+											{size}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+					</Field>
+				</div>
 			</div>
 
 			<FormModal
@@ -159,6 +183,7 @@ export function ListPagination({
 				fieldConfig={listPaginationConfig}
 				initialValues={config}
 				onSubmit={handleSaveSettings}
+				onDelete={onDelete ? handleDelete : undefined}
 			/>
 		</>
 	)

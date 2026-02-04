@@ -61,6 +61,7 @@ export function ListTable({
 	isLoading,
 	editMode,
 	onConfigUpdate,
+	onDelete,
 	sortField: externalSortField,
 	sortOrder: externalSortOrder,
 	onSort: externalOnSort,
@@ -199,6 +200,12 @@ export function ListTable({
 		setShowSettings(false)
 	}
 
+	const handleDelete = async () => {
+		if (onDelete && typeof onDelete === 'function') {
+			await onDelete()
+		}
+	}
+
 	if (columns.length === 0 && !editMode) {
 		return (
 			<div className='text-center py-12 text-muted-foreground'>
@@ -211,7 +218,14 @@ export function ListTable({
 
 	return (
 		<>
-			<div className='relative' onClick={editMode ? () => setShowSettings(true) : undefined}>
+			<div
+				className={`relative ${
+					editMode
+						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer'
+						: ''
+				}`}
+				onClick={editMode ? () => setShowSettings(true) : undefined}
+			>
 				<div
 					className={`overflow-hidden rounded-md border ${
 						showSampleData ? 'opacity-50' : ''
@@ -288,6 +302,7 @@ export function ListTable({
 				fieldConfig={listTableConfig}
 				initialValues={config}
 				onSubmit={handleSaveSettings}
+				onDelete={onDelete ? handleDelete : undefined}
 			/>
 		</>
 	)

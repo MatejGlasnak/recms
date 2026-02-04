@@ -6,22 +6,16 @@ export const listHeaderConfig: BlockFieldConfig = {
 			name: 'title',
 			type: 'text',
 			label: 'Title',
-			placeholder: 'Enter page title',
+			placeholder: 'Enter page title...',
+			comment: 'Main heading displayed at the top of the list page',
 			span: 'full'
 		},
 		{
 			name: 'description',
 			type: 'textarea',
 			label: 'Description',
-			placeholder: 'Enter page description',
-			span: 'full'
-		},
-		{
-			name: 'showEditButton',
-			type: 'checkbox',
-			label: 'Show Edit Button',
-			default: true,
-			comment: 'Display the edit mode toggle button',
+			placeholder: 'Enter page description...',
+			comment: 'Optional description text shown below the title',
 			span: 'full'
 		}
 	]

@@ -4,6 +4,7 @@ import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
 	SelectTrigger,
 	SelectValue
@@ -38,11 +39,13 @@ export function DropdownField({
 					<SelectValue placeholder={field.placeholder ?? 'Select an option'} />
 				</SelectTrigger>
 				<SelectContent>
-					{options.map(option => (
-						<SelectItem key={option.value} value={option.value}>
-							{option.label}
-						</SelectItem>
-					))}
+					<SelectGroup>
+						{options.map(option => (
+							<SelectItem key={option.value} value={option.value}>
+								{option.label}
+							</SelectItem>
+						))}
+					</SelectGroup>
 				</SelectContent>
 			</Select>
 			{field.comment && <FieldDescription>{field.comment}</FieldDescription>}

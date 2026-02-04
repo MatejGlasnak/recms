@@ -1,7 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useMemo, type ReactNode } from 'react'
+import React, { createContext, useContext, useMemo, useEffect, type ReactNode } from 'react'
 import type { FieldDefinition } from './BlockRegistry'
+import { registerAllFields } from '../form/registerFields'
 
 export interface FieldComponentProps {
 	field: FieldDefinition
@@ -19,12 +20,14 @@ export interface FieldTypeDefinition {
 	description?: string
 }
 
-interface FieldRegistryContextValue {
+export interface FieldRegistry {
 	fields: Map<string, FieldTypeDefinition>
 	registerField: (definition: FieldTypeDefinition) => void
 	unregisterField: (type: string) => void
 	getField: (type: string) => FieldTypeDefinition | undefined
 }
+
+interface FieldRegistryContextValue extends FieldRegistry {}
 
 const FieldRegistryContext = createContext<FieldRegistryContextValue | null>(null)
 
@@ -51,6 +54,11 @@ export function FieldRegistryProvider({ children }: { children: ReactNode }) {
 		},
 		[fields]
 	)
+
+	// Auto-register all field types on mount
+	useEffect(() => {
+		registerAllFields(registerField)
+	}, [registerField])
 
 	const value = useMemo(
 		() => ({

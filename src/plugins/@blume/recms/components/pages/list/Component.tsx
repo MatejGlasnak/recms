@@ -5,11 +5,12 @@ import { useList, useResourceParams } from '@refinedev/core'
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { usePageSetup } from '@/lib/contexts/page-context'
 import { useResources } from '@/lib/hooks/use-resources'
-import { Spinner } from '@/components/ui/spinner'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { BlockRegistryProvider, useBlockRegistry } from '../../registry/BlockRegistry'
 import { FieldRegistryProvider, useFieldRegistry } from '../../registry/FieldRegistry'
-import type { PageConfig, BlockConfig } from '../../../types/block-config'
+import { BlockRenderer } from '../../renderer'
+import { PageLoading } from '../../ui/PageLoading'
+import { PageError } from '../../ui/PageError'
+import type { PageConfig } from '../../../types/block-config'
 import { formatHeader } from '../../../utils'
 import { usePageConfig, useUpdatePageConfig } from '../../../hooks/use-page-config'
 
@@ -27,60 +28,10 @@ import { FilterCombobox, filterComboboxConfig } from '../../filters/filter-combo
 import { FilterCheckbox, filterCheckboxConfig } from '../../filters/filter-checkbox'
 
 // Import field types
-import { TextField } from '../../form/field-types/text-field'
-import { TextareaField } from '../../form/field-types/textarea-field'
-import { DropdownField } from '../../form/field-types/dropdown-field'
-import { CheckboxField } from '../../form/field-types/checkbox-field'
-import { NumberField } from '../../form/field-types/number-field'
-import { RepeaterField } from '../../form/field-types/repeater-field'
-import { SliderField } from '../../form/field-types/slider-field'
+import { registerAllFields } from '../../form/registerFields'
 
 export interface ListPageContainerProps {
 	resourceId?: string
-}
-
-function BlockRenderer({
-	block,
-	data,
-	isLoading,
-	editMode,
-	resourceId,
-	onConfigUpdate,
-	additionalProps
-}: {
-	block: BlockConfig
-	data?: unknown[]
-	isLoading?: boolean
-	editMode?: boolean
-	resourceId?: string
-	onConfigUpdate?: (blockId: string, config: Record<string, unknown>) => Promise<void>
-	additionalProps?: Record<string, unknown>
-}) {
-	const { getBlock } = useBlockRegistry()
-	const blockDef = getBlock(block.slug)
-
-	if (!blockDef) {
-		console.warn(`Block type "${block.slug}" not registered`)
-		return (
-			<Alert variant='destructive'>
-				<AlertDescription>Unknown block type: {block.slug}</AlertDescription>
-			</Alert>
-		)
-	}
-
-	const BlockComponent = blockDef.Component
-
-	return (
-		<BlockComponent
-			blockConfig={block}
-			data={data}
-			isLoading={isLoading}
-			editMode={editMode}
-			resourceId={resourceId}
-			onConfigUpdate={onConfigUpdate}
-			{...additionalProps}
-		/>
-	)
 }
 
 function ListPageContent({ resourceId }: { resourceId: string }) {
@@ -91,14 +42,7 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 
 	// Register field types
 	useEffect(() => {
-		registerField({ type: 'text', Component: TextField })
-		registerField({ type: 'textarea', Component: TextareaField })
-		registerField({ type: 'select', Component: DropdownField })
-		registerField({ type: 'dropdown', Component: DropdownField })
-		registerField({ type: 'checkbox', Component: CheckboxField })
-		registerField({ type: 'number', Component: NumberField })
-		registerField({ type: 'repeater', Component: RepeaterField })
-		registerField({ type: 'slider', Component: SliderField })
+		registerAllFields(registerField)
 	}, [registerField])
 
 	// Register blocks
@@ -156,13 +100,13 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 			Component: FilterCheckbox,
 			config: filterCheckboxConfig,
 			label: 'Filter Checkbox'
-		}),
-			registerBlock({
-				slug: 'table-filter',
-				Component: FilterCheckbox,
-				config: filterCheckboxConfig,
-				label: 'Filter Checkbox'
-			})
+		})
+		registerBlock({
+			slug: 'table-filter',
+			Component: FilterCheckbox,
+			config: filterCheckboxConfig,
+			label: 'Filter Checkbox'
+		})
 	}, [registerBlock])
 
 	const { data: resources = [], isLoading: isResourcesLoading } = useResources()
@@ -278,34 +222,18 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 	const isError = query.isError
 
 	if (isResourcesLoading || isLoading || isPageConfigLoading) {
-		return (
-			<div
-				className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-[min(24rem,60vh)]'
-				style={{ paddingTop: '24px' }}
-			>
-				<Spinner className='size-6 mb-2' />
-				<p className='text-sm text-muted-foreground'>
-					{isResourcesLoading
-						? 'Loading resources…'
-						: isPageConfigLoading
-						? 'Loading page configuration…'
-						: 'Loading data…'}
-				</p>
-			</div>
-		)
+		const loadingMessage =
+			isResourcesLoading || isPageConfigLoading ? 'Loading resources…' : 'Loading data…'
+
+		return <PageLoading message={loadingMessage} />
 	}
 
 	if (isPageConfigError || !pageConfig) {
-		return (
-			<div
-				className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8'
-				style={{ paddingTop: '24px' }}
-			>
-				<Alert variant='destructive'>
-					<AlertDescription>Failed to load page configuration</AlertDescription>
-				</Alert>
-			</div>
-		)
+		return <PageError message='Failed to load page configuration' />
+	}
+
+	if (isError) {
+		return <PageError error={query.error} message='Failed to load data' />
 	}
 
 	return (
@@ -313,14 +241,6 @@ function ListPageContent({ resourceId }: { resourceId: string }) {
 			className='container w-full mx-auto px-4 py-6 sm:px-6 lg:px-8'
 			style={{ paddingTop: '24px' }}
 		>
-			{isError && (
-				<Alert variant='destructive' className='mb-6'>
-					<AlertDescription>
-						{query.error instanceof Error ? query.error.message : 'Failed to load data'}
-					</AlertDescription>
-				</Alert>
-			)}
-
 			{pageConfig.blocks
 				.filter(block => block.visible !== false)
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))

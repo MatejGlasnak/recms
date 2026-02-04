@@ -1,39 +1,68 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from '@/components/ui/select'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/dialog'
 import { Plus, Trash2, GripVertical } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { FormModal } from '../../form/FormModal'
 import type { ColumnConfig } from '../../../types/block-config'
+import type { BlockFieldConfig } from '../../registry/BlockRegistry'
+import { columnTextConfig } from '../../columns/column-text/config'
+import { columnNumberConfig } from '../../columns/column-number/config'
+import { columnDateConfig } from '../../columns/column-date/config'
+import { columnBooleanConfig } from '../../columns/column-boolean/config'
+import { columnBadgeConfig } from '../../columns/column-badge/config'
+import { columnJsonConfig } from '../../columns/column-json/config'
 
 export interface ColumnEditorProps {
-	value: ColumnConfig[]
-	onChange: (columns: ColumnConfig[]) => void
+	value: unknown
+	onChange: (value: unknown) => void
+	field?: {
+		label?: string
+		comment?: string
+		required?: boolean
+	}
 }
 
-export function ColumnEditor({ value, onChange }: ColumnEditorProps) {
-	const columns = value || []
+// Map column types to their field configs
+const columnConfigMap: Record<ColumnConfig['type'], BlockFieldConfig> = {
+	text: columnTextConfig,
+	number: columnNumberConfig,
+	date: columnDateConfig,
+	boolean: columnBooleanConfig,
+	badge: columnBadgeConfig,
+	json: columnJsonConfig
+}
+
+// Base config for type selection
+const typeSelectionConfig: BlockFieldConfig = {
+	fields: [
+		{
+			name: 'type',
+			type: 'dropdown',
+			label: 'Column Type',
+			required: true,
+			options: [
+				{ label: 'Text', value: 'text' },
+				{ label: 'Number', value: 'number' },
+				{ label: 'Date', value: 'date' },
+				{ label: 'Boolean', value: 'boolean' },
+				{ label: 'Badge', value: 'badge' },
+				{ label: 'JSON', value: 'json' }
+			],
+			default: 'text',
+			comment: 'Determines how the value is formatted and displayed',
+			span: 'full'
+		}
+	]
+}
+
+export function ColumnEditor({ value, onChange, field }: ColumnEditorProps) {
+	const columns = useMemo(() => (value as ColumnConfig[]) || [], [value])
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const [editingColumn, setEditingColumn] = useState<ColumnConfig | null>(null)
+	const [isNewColumn, setIsNewColumn] = useState(false)
 
 	const handleAdd = useCallback(() => {
 		setEditingColumn({
@@ -44,11 +73,13 @@ export function ColumnEditor({ value, onChange }: ColumnEditorProps) {
 			enabledByDefault: true,
 			sortable: true
 		})
+		setIsNewColumn(true)
 		setDialogOpen(true)
 	}, [])
 
 	const handleEdit = useCallback((column: ColumnConfig) => {
 		setEditingColumn({ ...column })
+		setIsNewColumn(false)
 		setDialogOpen(true)
 	}, [])
 
@@ -59,259 +90,110 @@ export function ColumnEditor({ value, onChange }: ColumnEditorProps) {
 		[columns, onChange]
 	)
 
-	const handleSave = useCallback(() => {
-		if (!editingColumn) return
-		if (!editingColumn.field || !editingColumn.label) {
-			alert('Field and label are required')
-			return
-		}
-		const existingIndex = columns.findIndex(c => c.id === editingColumn.id)
-		if (existingIndex >= 0) {
-			const updated = [...columns]
-			updated[existingIndex] = editingColumn
-			onChange(updated)
-		} else {
-			onChange([...columns, editingColumn])
-		}
-		setDialogOpen(false)
-		setEditingColumn(null)
-	}, [editingColumn, columns, onChange])
+	const handleSubmit = useCallback(
+		(values: Record<string, unknown>) => {
+			if (!editingColumn) return
 
-	const handleCancel = useCallback(() => {
-		setDialogOpen(false)
-		setEditingColumn(null)
-	}, [])
+			const updatedColumn = {
+				...editingColumn,
+				...values
+			} as ColumnConfig
+
+			const existingIndex = columns.findIndex(c => c.id === editingColumn.id)
+			if (existingIndex >= 0) {
+				const updated = [...columns]
+				updated[existingIndex] = updatedColumn
+				onChange(updated)
+			} else {
+				onChange([...columns, updatedColumn])
+			}
+
+			setDialogOpen(false)
+			setEditingColumn(null)
+		},
+		[editingColumn, columns, onChange]
+	)
+
+	// Build the dynamic field config based on the selected type
+	const fieldConfig = useMemo((): BlockFieldConfig => {
+		if (!editingColumn) {
+			return { fields: [] }
+		}
+
+		const typeConfig = columnConfigMap[editingColumn.type]
+		return {
+			fields: [...typeSelectionConfig.fields, ...typeConfig.fields]
+		}
+	}, [editingColumn])
 
 	return (
 		<div className='space-y-4'>
 			<div className='flex items-center justify-between'>
-				<h3 className='text-lg font-semibold'>Columns</h3>
-				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-					<DialogTrigger asChild>
-						<Button size='sm' onClick={handleAdd}>
-							<Plus className='h-4 w-4 mr-2' />
-							Add Column
-						</Button>
-					</DialogTrigger>
-					<DialogContent className='sm:max-w-[600px]'>
-						<DialogHeader>
-							<DialogTitle>
-								{editingColumn?.field &&
-								columns.find(c => c.id === editingColumn.id)
-									? 'Edit Column'
-									: 'Add Column'}
-							</DialogTitle>
-							<DialogDescription>
-								Configure column settings including field mapping, display type, and
-								visibility options.
-							</DialogDescription>
-						</DialogHeader>
-
-						{editingColumn && (
-							<div className='grid gap-4 py-4'>
-								<div className='grid gap-2'>
-									<Label htmlFor='field'>Field Name</Label>
-									<Input
-										id='field'
-										value={editingColumn.field}
-										onChange={e =>
-											setEditingColumn({
-												...editingColumn,
-												field: e.target.value
-											})
-										}
-										placeholder='e.g., userId, createdAt'
-									/>
-									<p className='text-xs text-muted-foreground'>
-										The exact field name from your data source
-									</p>
-								</div>
-
-								<div className='grid gap-2'>
-									<Label htmlFor='label'>Display Label</Label>
-									<Input
-										id='label'
-										value={editingColumn.label}
-										onChange={e =>
-											setEditingColumn({
-												...editingColumn,
-												label: e.target.value
-											})
-										}
-										placeholder='e.g., User ID, Created At'
-									/>
-									<p className='text-xs text-muted-foreground'>
-										How the column header will be displayed
-									</p>
-								</div>
-
-								<div className='grid gap-2'>
-									<Label htmlFor='type'>Column Type</Label>
-									<Select
-										value={editingColumn.type}
-										onValueChange={(value: ColumnConfig['type']) =>
-											setEditingColumn({ ...editingColumn, type: value })
-										}
-									>
-										<SelectTrigger id='type'>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value='text'>Text</SelectItem>
-											<SelectItem value='number'>Number</SelectItem>
-											<SelectItem value='date'>Date</SelectItem>
-											<SelectItem value='boolean'>Boolean</SelectItem>
-											<SelectItem value='badge'>Badge</SelectItem>
-											<SelectItem value='json'>JSON</SelectItem>
-										</SelectContent>
-									</Select>
-									<p className='text-xs text-muted-foreground'>
-										Determines how the value is formatted and displayed
-									</p>
-								</div>
-
-								{editingColumn.type === 'badge' && (
-									<div className='grid gap-2'>
-										<Label htmlFor='badgeVariant'>Badge Style</Label>
-										<Select
-											value={editingColumn.badgeVariant || 'default'}
-											onValueChange={(
-												value:
-													| 'default'
-													| 'secondary'
-													| 'destructive'
-													| 'outline'
-											) =>
-												setEditingColumn({
-													...editingColumn,
-													badgeVariant: value
-												})
-											}
-										>
-											<SelectTrigger id='badgeVariant'>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value='default'>
-													Default (Primary)
-												</SelectItem>
-												<SelectItem value='secondary'>Secondary</SelectItem>
-												<SelectItem value='destructive'>
-													Destructive (Red)
-												</SelectItem>
-												<SelectItem value='outline'>Outline</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-								)}
-
-								<div className='flex items-center justify-between rounded-lg border p-4'>
-									<div className='space-y-0.5'>
-										<Label htmlFor='enabled'>Enabled by Default</Label>
-										<p className='text-xs text-muted-foreground'>
-											Show this column when the page loads
-										</p>
-									</div>
-									<Switch
-										id='enabled'
-										checked={editingColumn.enabledByDefault}
-										onCheckedChange={checked =>
-											setEditingColumn({
-												...editingColumn,
-												enabledByDefault: checked
-											})
-										}
-									/>
-								</div>
-
-								<div className='flex items-center justify-between rounded-lg border p-4'>
-									<div className='space-y-0.5'>
-										<Label htmlFor='sortable'>Sortable</Label>
-										<p className='text-xs text-muted-foreground'>
-											Allow users to sort by this column
-										</p>
-									</div>
-									<Switch
-										id='sortable'
-										checked={editingColumn.sortable}
-										onCheckedChange={checked =>
-											setEditingColumn({
-												...editingColumn,
-												sortable: checked
-											})
-										}
-									/>
-								</div>
-
-								<div className='grid gap-2'>
-									<Label htmlFor='width'>Column Width (optional)</Label>
-									<Input
-										id='width'
-										type='number'
-										value={editingColumn.width || ''}
-										onChange={e =>
-											setEditingColumn({
-												...editingColumn,
-												width: e.target.value
-													? Number(e.target.value)
-													: undefined
-											})
-										}
-										placeholder='e.g., 200'
-									/>
-									<p className='text-xs text-muted-foreground'>
-										Width in pixels (optional)
-									</p>
-								</div>
-							</div>
-						)}
-
-						<DialogFooter>
-							<Button variant='outline' onClick={handleCancel}>
-								Cancel
-							</Button>
-							<Button onClick={handleSave}>Save Column</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			</div>
-
-			<div className='space-y-2'>
-				{columns.length === 0 ? (
-					<Card className='p-8 text-center text-muted-foreground'>
-						<p>No columns configured yet.</p>
-						<p className='text-sm mt-2'>Click &quot;Add Column&quot; to get started.</p>
-					</Card>
-				) : (
-					columns.map(column => (
-						<Card key={column.id} className='p-3 hover:bg-muted/50 transition-colors'>
-							<div className='flex items-center gap-3'>
-								<GripVertical className='h-4 w-4 text-muted-foreground cursor-move flex-shrink-0' />
-								<div
-									className='flex-1 flex items-center gap-2 cursor-pointer'
-									onClick={() => handleEdit(column)}
-								>
-									<span className='font-medium'>{column.label}</span>
-									<span className='text-xs px-2 py-0.5 rounded bg-secondary text-secondary-foreground'>
-										{column.type}
-									</span>
-								</div>
-								<Button
-									variant='ghost'
-									size='sm'
-									onClick={e => {
-										e.stopPropagation()
-										handleDelete(column.id)
-									}}
-									className='h-8 w-8 p-0 flex-shrink-0'
-								>
-									<Trash2 className='h-4 w-4' />
-								</Button>
-							</div>
-						</Card>
-					))
+				{field?.label && (
+					<Label className='text-base font-semibold'>
+						{field.label}
+						{field.required && <span className='text-destructive ml-1'>*</span>}
+					</Label>
 				)}
+				<Button onClick={handleAdd} size='sm'>
+					<Plus className='h-4 w-4 mr-2' />
+					Add Column
+				</Button>
 			</div>
+
+			<div className='flex flex-col gap-2'>
+				{columns.map(column => (
+					<Card
+						key={column.id}
+						className='p-3 hover:bg-muted/50 transition-colors cursor-pointer'
+						onClick={() => handleEdit(column)}
+					>
+						<div className='flex items-center gap-3'>
+							<GripVertical className='h-4 w-4 text-muted-foreground cursor-move flex-shrink-0' />
+							<div className='flex-1 flex items-center gap-2'>
+								<span className='font-medium'>{column.label}</span>
+								<span className='text-xs px-2 py-0.5 rounded bg-secondary text-secondary-foreground'>
+									{column.type}
+								</span>
+								{column.field && (
+									<span className='text-xs text-muted-foreground'>
+										({column.field})
+									</span>
+								)}
+							</div>
+							<Button
+								variant='ghost'
+								size='sm'
+								onClick={e => {
+									e.stopPropagation()
+									handleDelete(column.id)
+								}}
+								className='h-8 w-8 p-0 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10'
+							>
+								<Trash2 className='h-4 w-4' />
+							</Button>
+						</div>
+					</Card>
+				))}
+			</div>
+
+			{field?.comment && <p className='text-sm text-muted-foreground'>{field.comment}</p>}
+
+			<FormModal
+				open={dialogOpen}
+				onOpenChange={setDialogOpen}
+				title={isNewColumn ? 'Add Column' : 'Edit Column'}
+				description='Configure column settings including field mapping, display type, and visibility options.'
+				fieldConfig={fieldConfig}
+				initialValues={(editingColumn as unknown as Record<string, unknown>) || {}}
+				onSubmit={handleSubmit}
+				onDelete={
+					!isNewColumn && editingColumn ? () => handleDelete(editingColumn.id) : undefined
+				}
+				submitLabel='Save'
+				cancelLabel='Cancel'
+				deleteLabel='Delete Column'
+			/>
 		</div>
 	)
 }

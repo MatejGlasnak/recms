@@ -45,19 +45,37 @@ export function FormField({
 	const FieldComponent = fieldDefinition.Component
 
 	// Handle span layout
-	const spanClasses = {
-		auto: 'col-auto',
-		left: 'col-span-6',
-		right: 'col-span-6',
-		row: 'col-span-12 grid grid-cols-2 gap-4',
-		full: 'col-span-12'
+	const getSpanClass = () => {
+		if (typeof field.span === 'number') {
+			const spanMap: Record<number, string> = {
+				1: 'col-span-1',
+				2: 'col-span-2',
+				3: 'col-span-3',
+				4: 'col-span-4',
+				5: 'col-span-5',
+				6: 'col-span-6',
+				7: 'col-span-7',
+				8: 'col-span-8',
+				9: 'col-span-9',
+				10: 'col-span-10',
+				11: 'col-span-11',
+				12: 'col-span-12'
+			}
+			return spanMap[field.span] || ''
+		}
+
+		const spanClasses = {
+			auto: 'col-auto',
+			left: 'col-span-6',
+			right: 'col-span-6',
+			row: 'col-span-12 grid grid-cols-2 gap-4',
+			full: 'col-span-12'
+		}
+
+		return field.span ? spanClasses[field.span] : ''
 	}
 
-	const containerClass = cn(
-		field.span && spanClasses[field.span],
-		field.cssClass,
-		field.stretch && 'h-full'
-	)
+	const containerClass = cn(getSpanClass(), field.cssClass, field.stretch && 'h-full')
 
 	return (
 		<div className={containerClass} {...field.containerAttributes}>

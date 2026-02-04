@@ -11,13 +11,13 @@ export function ListHeader({
 	blockConfig,
 	editMode,
 	resourceId,
-	onConfigUpdate
+	onConfigUpdate,
+	onDelete
 }: BlockComponentProps) {
 	const [showSettings, setShowSettings] = useState(false)
 	const config = blockConfig.config as {
 		title?: string
 		description?: string
-		showEditButton?: boolean
 		onEditModeToggle?: () => void
 	}
 
@@ -32,10 +32,20 @@ export function ListHeader({
 		setShowSettings(false)
 	}
 
+	const handleDelete = async () => {
+		if (onDelete && typeof onDelete === 'function') {
+			await onDelete()
+		}
+	}
+
 	return (
 		<>
 			<div
-				className='flex items-center justify-between mb-6'
+				className={`flex items-center justify-between mb-6 ${
+					editMode
+						? 'p-3 border border-dashed border-primary/40 hover:border-primary hover:border-solid rounded-lg cursor-pointer'
+						: ''
+				}`}
 				onClick={editMode ? () => setShowSettings(true) : undefined}
 			>
 				<div>
@@ -46,7 +56,7 @@ export function ListHeader({
 						<p className='text-muted-foreground mt-2'>{config.description}</p>
 					)}
 				</div>
-				{config.showEditButton && editMode !== undefined && config.onEditModeToggle && (
+				{editMode !== undefined && config.onEditModeToggle && (
 					<Button
 						variant={editMode ? 'default' : 'outline'}
 						size='sm'
@@ -78,6 +88,7 @@ export function ListHeader({
 				fieldConfig={listHeaderConfig}
 				initialValues={config}
 				onSubmit={handleSaveSettings}
+				onDelete={onDelete ? handleDelete : undefined}
 			/>
 		</>
 	)
