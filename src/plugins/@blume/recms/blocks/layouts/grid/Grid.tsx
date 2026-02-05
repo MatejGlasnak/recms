@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { FormModal } from '../../../ui/FormModal'
-import { gridConfig, getGridClasses } from './config'
+import { gridConfig, getGridClasses, getColSpanClass } from './config'
 import { useBlockRegistry, useFieldRegistry } from '../../../core/registries'
 import type { BlockComponentProps } from '../../../core/registries/types'
 import type { BlockConfig } from '../../../types/block-config'
@@ -25,9 +25,53 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { selectableRegistry } from '../../../core/SelectableRegistry'
 
 function generateBlockId(): string {
 	return `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * Extract field names from a record object
+ * Handles nested objects recursively
+ */
+function extractFieldOptionsFromRecord(
+	record: Record<string, unknown> | null | undefined,
+	prefix = '',
+	level = 0
+): Array<{ value: string; label: string; icon?: string }> {
+	if (!record) return []
+
+	const fields: Array<{ value: string; label: string; icon?: string }> = []
+
+	Object.keys(record).forEach(key => {
+		const value = record[key]
+		const fieldPath = prefix ? `${prefix}.${key}` : key
+
+		// Add the field itself
+		fields.push({
+			value: fieldPath,
+			label: fieldPath,
+			icon: level > 0 ? 'chevron-right' : undefined
+		})
+
+		// If it's an object (not array, not null), recursively extract nested fields
+		if (
+			value &&
+			typeof value === 'object' &&
+			!Array.isArray(value) &&
+			level < 2 // Limit nesting to 2 levels to avoid too deep recursion
+		) {
+			const nestedFields = extractFieldOptionsFromRecord(
+				value as Record<string, unknown>,
+				fieldPath,
+				level + 1
+			)
+			fields.push(...nestedFields)
+		}
+	})
+
+	return level === 0 ? fields.sort((a, b) => a.label.localeCompare(b.label)) : fields
 }
 
 interface NestedBlockConfig {
@@ -68,6 +112,14 @@ function SortableBlock({ block, editMode, onClick, children }: SortableBlockProp
 		opacity: isDragging ? 0.5 : 1
 	}
 
+	// Register callback for this block
+	useEffect(() => {
+		if (editMode) {
+			selectableRegistry.register(block.id, onClick)
+			return () => selectableRegistry.unregister(block.id)
+		}
+	}, [editMode, block.id, onClick])
+
 	if (!editMode) {
 		return <div>{children}</div>
 	}
@@ -76,18 +128,13 @@ function SortableBlock({ block, editMode, onClick, children }: SortableBlockProp
 		<div
 			ref={setNodeRef}
 			style={style}
-			className='relative cursor-move rounded-md border border-dashed border-primary/40 p-3 transition-colors hover:border-solid hover:border-primary'
+			data-recms-selectable='field'
+			data-recms-callback-id={block.id}
+			className='sortable-block-item relative cursor-move'
 			{...attributes}
 			{...listeners}
 		>
-			<div
-				onClick={e => {
-					e.stopPropagation()
-					onClick()
-				}}
-			>
-				{children}
-			</div>
+			{children}
 		</div>
 	)
 }
@@ -120,6 +167,11 @@ export function Grid({
 	const isFieldMode =
 		allowedBlockTypes.length > 0 &&
 		allowedBlockTypes.every(type => getField(type) !== undefined)
+
+	// Extract field options from record if available
+	const fieldOptions = useMemo(() => {
+		return extractFieldOptionsFromRecord(additionalProps.record as Record<string, unknown>)
+	}, [additionalProps.record])
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -199,30 +251,52 @@ export function Grid({
 			? {
 					fields: [
 						{
-							name: 'field',
-							type: 'text' as const,
-							label: 'Field Name',
-							required: true,
-							placeholder: 'e.g., title, description',
-							comment: 'The field name from the record to display',
-							span: 'full' as const
+							name: 'basic',
+							type: 'group' as const,
+							label: 'Basic Information',
+							columns: 12,
+							fields: [
+								{
+									name: 'label',
+									type: 'text' as const,
+									label: 'Label',
+									placeholder: 'Optional label override',
+									comment: 'Leave empty to use field name',
+									span: 6
+								},
+								{
+									name: 'field',
+									type: 'select' as const,
+									label: 'Field',
+									required: true,
+									placeholder:
+										fieldOptions.length > 0
+											? 'Search or select field...'
+											: 'Type field name...',
+									options: fieldOptions,
+									comment: 'The field name from the record to display',
+									span: 6
+								}
+							]
 						},
 						{
-							name: 'label',
-							type: 'text' as const,
-							label: 'Label',
-							placeholder: 'Optional label override',
-							comment: 'Leave empty to use field name',
-							span: 'full' as const
-						},
-						{
-							name: 'columnSpan',
-							type: 'number' as const,
-							label: 'Column Span',
-							default: 1,
-							placeholder: '1',
-							comment: `Span from 1 to ${columnsDesktop} columns`,
-							span: 'full' as const
+							name: 'layout',
+							type: 'group' as const,
+							label: 'Layout',
+							columns: 12,
+							fields: [
+								{
+									name: 'columnSpan',
+									type: 'slider' as const,
+									label: 'Column Span (Mobile)',
+									default: 1,
+									min: 1,
+									max: columnsMobile,
+									step: 1,
+									comment: 'Mobile devices (< 768px)',
+									span: 12
+								}
+							]
 						}
 					]
 			  }
@@ -232,58 +306,80 @@ export function Grid({
 	const addModalFieldConfig = {
 		fields: [
 			{
-				name: 'blockType',
-				type: 'dropdown' as const,
-				label: isFieldMode ? 'Field Type' : 'Block Type',
-				required: true,
-				options: allowedBlockTypes.map(type => {
-					if (isFieldMode) {
-						const fieldDef = getField(type)
-						return {
-							label: fieldDef?.label ?? type,
-							value: type
-						}
-					} else {
-						const blockDef = getBlock(type)
-						return {
-							label: blockDef?.label ?? type,
-							value: type
-						}
-					}
-				}),
-				span: 'full' as const
+				name: 'basic',
+				type: 'group' as const,
+				label: 'Basic Information',
+				columns: 12,
+				fields: [
+					{
+						name: 'blockType',
+						type: 'dropdown' as const,
+						label: isFieldMode ? 'Field Type' : 'Block Type',
+						required: true,
+						options: allowedBlockTypes.map(type => {
+							if (isFieldMode) {
+								const fieldDef = getField(type)
+								return {
+									label: fieldDef?.label ?? type,
+									value: type
+								}
+							} else {
+								const blockDef = getBlock(type)
+								return {
+									label: blockDef?.label ?? type,
+									value: type
+								}
+							}
+						}),
+						span: 12
+					},
+					// Add field-specific config for field mode
+					...(isFieldMode
+						? [
+								{
+									name: 'label',
+									type: 'text' as const,
+									label: 'Label',
+									placeholder: 'Optional label override',
+									comment: 'Leave empty to use field name',
+									span: 6
+								},
+								{
+									name: 'field',
+									type: 'select' as const,
+									label: 'Field',
+									required: true,
+									placeholder:
+										fieldOptions.length > 0
+											? 'Search or select field...'
+											: 'Type field name...',
+									options: fieldOptions,
+									comment: 'The field name from the record to display',
+									span: 6
+								}
+						  ]
+						: [])
+				]
 			},
 			{
-				name: 'columnSpan',
-				type: 'number' as const,
-				label: 'Column Span',
-				default: 1,
-				placeholder: '1',
-				comment: `Span from 1 to ${columnsDesktop} columns`,
-				span: 'full' as const
+				name: 'layout',
+				type: 'group' as const,
+				label: 'Layout',
+				columns: 12,
+				fields: [
+					{
+						name: 'columnSpan',
+						type: 'slider' as const,
+						label: 'Column Span (Mobile)',
+						default: 1,
+						min: 1,
+						max: columnsMobile,
+						step: 1,
+						comment: 'Mobile devices (< 768px)',
+						span: 12
+					}
+				]
 			},
-			// Add field-specific config for field mode
-			...(isFieldMode
-				? [
-						{
-							name: 'field',
-							type: 'text' as const,
-							label: 'Field Name',
-							required: true,
-							placeholder: 'e.g., title, description',
-							comment: 'The field name from the record to display',
-							span: 'full' as const
-						},
-						{
-							name: 'label',
-							type: 'text' as const,
-							label: 'Label',
-							placeholder: 'Optional label override',
-							comment: 'Leave empty to use field name',
-							span: 'full' as const
-						}
-				  ]
-				: []),
 			// Add all possible fields from all allowed block types with triggers (for block mode)
 			...(!isFieldMode
 				? allowedBlockTypes.flatMap(type => {
@@ -340,22 +436,23 @@ export function Grid({
 		}
 	}
 
+	// Register grid callback
+	useEffect(() => {
+		if (editMode) {
+			selectableRegistry.register(blockConfig.id, () => setShowConfigModal(true))
+			return () => selectableRegistry.unregister(blockConfig.id)
+		}
+	}, [editMode, blockConfig.id])
+
 	return (
 		<>
 			<div
-				className={`grid gap-4 ${gridClasses} ${
-					editMode
-						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary [&:has(>*:hover)]:border-primary/40'
-						: ''
-				}`}
-				onClick={e => {
-					if (editMode) {
-						// Only open config if clicking directly on the grid container, not on children
-						if (e.target === e.currentTarget) {
-							setShowConfigModal(true)
-						}
-					}
-				}}
+				{...(editMode && {
+					'data-recms-selectable': 'grid',
+					'data-recms-callback-id': blockConfig.id
+				})}
+				data-grid-container='true'
+				className={`grid gap-4 ${gridClasses}`}
 			>
 				<DndContext
 					sensors={sensors}
@@ -375,7 +472,7 @@ export function Grid({
 								return (
 									<div
 										key={block.id}
-										style={{ gridColumn: `span ${block.columnSpan ?? 1}` }}
+										className={getColSpanClass(block.columnSpan ?? 1)}
 									>
 										<Alert variant='destructive'>
 											<AlertDescription>
@@ -407,7 +504,7 @@ export function Grid({
 								return (
 									<div
 										key={block.id}
-										style={{ gridColumn: `span ${block.columnSpan ?? 1}` }}
+										className={getColSpanClass(block.columnSpan ?? 1)}
 									>
 										<SortableBlock
 											block={block}
@@ -460,7 +557,7 @@ export function Grid({
 								return (
 									<div
 										key={block.id}
-										style={{ gridColumn: `span ${block.columnSpan ?? 1}` }}
+										className={getColSpanClass(block.columnSpan ?? 1)}
 									>
 										<SortableBlock
 											block={block}
@@ -502,9 +599,11 @@ export function Grid({
 
 				{editMode && (
 					<div
-						className='group flex h-full w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-primary/60 opacity-50 transition-opacity hover:border-solid hover:border-primary hover:opacity-100'
+						data-recms-ignore='true'
+						className={`group flex h-full w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-primary/60 opacity-50 transition-opacity hover:border-solid hover:border-primary hover:opacity-100 ${getColSpanClass(
+							Math.min(1, columnsDesktop)
+						)}`}
 						onClick={() => setShowAddModal(true)}
-						style={{ gridColumn: `span ${Math.min(1, columnsDesktop)}` }}
 					>
 						<Plus className='size-8 font-extralight text-muted-foreground transition-colors group-hover:text-primary' />
 					</div>

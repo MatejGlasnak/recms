@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useRef } from 'react'
 import { usePageConfig, useUpdatePageConfig } from '../../hooks/use-page-config'
 import { BlockRenderer } from '../../ui/BlockRenderer'
 import { PageLoading } from '../../ui/PageLoading'
 import { PageError } from '../../ui/PageError'
 import type { PageConfig } from '../../types/block-config'
+import { useSelectableSystem } from '../../hooks/useSelectableSystem'
 
 export interface PageWrapperProps {
 	pageType: 'list' | 'show' | 'edit' | 'create'
@@ -36,9 +37,20 @@ export function PageWrapper({
 	onEditModeToggle
 }: PageWrapperProps) {
 	const [editMode, setEditMode] = useState(false)
+	const containerRef = useRef<HTMLDivElement | null>(null)
 
-	// Construct API path: list -> resourceId, show -> resourceId/show
-	const configPath = pageType === 'show' ? `${resourceId}/show` : resourceId
+	// Initialize selectable system
+	useSelectableSystem(containerRef, editMode)
+
+	// Construct API path based on page type
+	const configPath =
+		pageType === 'show'
+			? `${resourceId}/show`
+			: pageType === 'edit'
+			? `${resourceId}/edit`
+			: pageType === 'create'
+			? `${resourceId}/create`
+			: resourceId
 
 	const {
 		data: apiPageConfig,
@@ -62,6 +74,8 @@ export function PageWrapper({
 					}
 				}
 			}
+			// Pass through edit/create header blocks without modification
+			// (they get their handlers from additionalPropsMap)
 			return block
 		})
 
@@ -97,7 +111,10 @@ export function PageWrapper({
 
 	// Vertical block layout (inspired by list-filters)
 	return (
-		<div className='container mx-auto flex w-full flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
+		<div
+			ref={containerRef}
+			className='container mx-auto flex w-full flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'
+		>
 			{pageConfig.blocks
 				.filter(block => block.visible !== false)
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))

@@ -54,10 +54,7 @@ export function ShowHeader({
 		router.push(`/admin/resources/${resourceId}/edit/${recordId}`)
 	}
 
-	const handleDelete = () => {
-		// TODO: Implement delete functionality
-		console.log('Delete record:', recordId)
-	}
+	const handleDelete = () => {}
 
 	const handleConfigUpdate = async (values: Record<string, unknown>) => {
 		if (onConfigUpdate) {

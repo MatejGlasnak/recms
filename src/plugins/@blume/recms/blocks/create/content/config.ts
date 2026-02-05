@@ -1,75 +1,9 @@
 import type { BlockFieldConfig } from '../../../core/registries/types'
 
 /**
- * Extract field names and infer types from a record object
- * Handles nested objects recursively
+ * Static config for block registration
  */
-function extractFieldsFromRecord(
-	record: Record<string, unknown> | null | undefined,
-	prefix = '',
-	level = 0
-): Array<{
-	value: string
-	label: string
-	type: string
-	icon?: string
-}> {
-	if (!record) return []
-
-	const fields: Array<{ value: string; label: string; type: string; icon?: string }> = []
-
-	const inferType = (value: unknown): string => {
-		if (value === null || value === undefined) return 'text'
-		if (typeof value === 'boolean') return 'boolean'
-		if (typeof value === 'number') return 'number'
-		if (typeof value === 'string') {
-			// Check if it's a date string
-			if (/^\d{4}-\d{2}-\d{2}/.test(value)) return 'date'
-			return 'text'
-		}
-		if (typeof value === 'object') {
-			if (Array.isArray(value)) return 'json'
-			return 'json'
-		}
-		return 'text'
-	}
-
-	Object.keys(record).forEach(key => {
-		const value = record[key]
-		const fieldPath = prefix ? `${prefix}.${key}` : key
-		const type = inferType(value)
-
-		// Add the field itself
-		fields.push({
-			value: fieldPath,
-			label: fieldPath,
-			type,
-			icon: level > 0 ? 'chevron-right' : undefined
-		})
-
-		// If it's an object (not array, not null), recursively extract nested fields
-		if (
-			value &&
-			typeof value === 'object' &&
-			!Array.isArray(value) &&
-			level < 2 // Limit nesting to 2 levels to avoid too deep recursion
-		) {
-			const nestedFields = extractFieldsFromRecord(
-				value as Record<string, unknown>,
-				fieldPath,
-				level + 1
-			)
-			fields.push(...nestedFields)
-		}
-	})
-
-	return level === 0 ? fields.sort((a, b) => a.label.localeCompare(b.label)) : fields
-}
-
-/**
- * Static config for block registration (without dynamic field options)
- */
-export const showContentConfig: BlockFieldConfig = {
+export const createContentConfig: BlockFieldConfig = {
 	fields: [
 		{
 			name: 'layout',
@@ -127,25 +61,19 @@ export const showContentConfig: BlockFieldConfig = {
 }
 
 /**
- * Generate dynamic config based on available record data
+ * Generate dynamic config for create content
  */
-export function getShowContentConfig(
-	record: Record<string, unknown> | null | undefined
-): BlockFieldConfig {
-	const availableFields = extractFieldsFromRecord(record)
-	const fieldOptions = availableFields.map(f => ({ label: f.label, value: f.value }))
-
-	// Get unique types from available fields
-	const availableTypes = Array.from(new Set(availableFields.map(f => f.type)))
+export function getCreateContentConfig(): BlockFieldConfig {
 	const typeOptions = [
 		{ label: 'Text', value: 'text' },
+		{ label: 'Textarea', value: 'textarea' },
 		{ label: 'Number', value: 'number' },
-		{ label: 'Date', value: 'date' },
-		{ label: 'Rich Text', value: 'richtext' },
-		{ label: 'Boolean', value: 'boolean' },
-		{ label: 'Badge', value: 'badge' },
-		{ label: 'JSON', value: 'json' }
-	].filter(opt => availableTypes.includes(opt.value) || opt.value === 'text')
+		{ label: 'Dropdown', value: 'dropdown' },
+		{ label: 'Combobox', value: 'combobox' },
+		{ label: 'Checkbox', value: 'checkbox' },
+		{ label: 'Switch', value: 'switch' },
+		{ label: 'Slider', value: 'slider' }
+	]
 
 	return {
 		fields: [
@@ -201,14 +129,10 @@ export function getShowContentConfig(
 								},
 								{
 									name: 'field',
-									type: 'combobox',
-									label: 'Field',
+									type: 'text',
+									label: 'Field Name',
 									required: true,
-									placeholder:
-										fieldOptions.length > 0
-											? 'Search or select field...'
-											: 'Type field name...',
-									options: fieldOptions,
+									placeholder: 'e.g., title, description, status',
 									span: 6
 								},
 								{
@@ -217,14 +141,21 @@ export function getShowContentConfig(
 									label: 'Type',
 									options: typeOptions,
 									default: 'text',
-									span: 6
+									span: 4
 								},
 								{
-									name: 'format',
+									name: 'required',
+									type: 'switch',
+									label: 'Required',
+									default: false,
+									span: 4
+								},
+								{
+									name: 'placeholder',
 									type: 'text',
-									label: 'Format',
-									placeholder: 'e.g., YYYY-MM-DD for dates',
-									span: 6
+									label: 'Placeholder',
+									placeholder: 'Optional placeholder text',
+									span: 4
 								}
 							]
 						},
@@ -237,12 +168,11 @@ export function getShowContentConfig(
 								{
 									name: 'colspan',
 									type: 'slider',
-									label: 'Column Span (Mobile)',
+									label: 'Column Span',
 									default: 1,
 									min: 1,
 									max: 12,
 									step: 1,
-									comment: 'Mobile devices (< 768px)',
 									span: 12
 								}
 							]

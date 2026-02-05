@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs as TabsUI, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { BlockComponentProps } from '../../../core/registries/types'
 import { useFieldRegistry } from '../../../core/registries'
@@ -11,6 +11,7 @@ import type { TabsConfig } from './types'
 import type { BlockConfig } from '../../../types'
 import { tabsConfig } from './config'
 import { EditableWrapper } from '../../../ui/EditableWrapper'
+import { selectableRegistry } from '../../../core/SelectableRegistry'
 
 export interface TabsProps extends BlockComponentProps {
 	record?: Record<string, unknown> | null
@@ -56,6 +57,14 @@ export function Tabs({ blockConfig, editMode, record, onConfigUpdate, onDelete }
 		setShowConfigModal(false)
 	}
 
+	// Register tabs callback
+	useEffect(() => {
+		if (editMode) {
+			selectableRegistry.register(blockConfig.id, () => setShowConfigModal(true))
+			return () => selectableRegistry.unregister(blockConfig.id)
+		}
+	}, [editMode, blockConfig.id])
+
 	// Show empty state when no tabs in edit mode
 	if (editMode && tabs.length === 0) {
 		return (
@@ -92,19 +101,16 @@ export function Tabs({ blockConfig, editMode, record, onConfigUpdate, onDelete }
 	return (
 		<>
 			<div
-				className={`${
-					editMode
-						? 'cursor-pointer rounded-lg border border-dashed border-primary/40 p-3 hover:border-solid hover:border-primary [&:has(>*:hover)]:border-primary/40'
-						: ''
-				}`}
-				onClick={e => {
-					if (editMode && e.target === e.currentTarget) {
-						setShowConfigModal(true)
-					}
-				}}
+				{...(editMode && {
+					'data-recms-selectable': 'tabs',
+					'data-recms-callback-id': blockConfig.id
+				})}
 			>
 				<TabsUI value={activeTab} onValueChange={setActiveTab} orientation={orientation}>
-					<TabsList className='justify-start w-fit'>
+					<TabsList
+						{...(editMode && { 'data-recms-ignore': 'true' })}
+						className='justify-start w-fit'
+					>
 						{tabs.map(tab => (
 							<TabsTrigger key={tab.id} value={tab.id}>
 								{tab.label}
@@ -128,19 +134,11 @@ export function Tabs({ blockConfig, editMode, record, onConfigUpdate, onDelete }
 							}
 						}
 
-						console.log(
-							'[Tabs] Rendering tab:',
-							tab.id,
-							'with grid config:',
-							gridBlockConfig.config
-						)
-
 						return (
 							<TabsContent
 								key={tab.id}
 								value={tab.id}
 								className='mt-6 p-5 border border-border rounded-lg'
-								onClick={e => editMode && e.stopPropagation()}
 							>
 								<Grid
 									blockConfig={gridBlockConfig}

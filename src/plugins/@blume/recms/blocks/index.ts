@@ -2,3 +2,5 @@
 export * from './layouts'
 export * from './list'
 export * from './show'
+export * from './edit'
+export * from './create'

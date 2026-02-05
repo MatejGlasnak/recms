@@ -6,17 +6,17 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import type { BlockComponentProps } from '../../../core/registries/types'
 import { EditableWrapper } from '../../../ui/EditableWrapper'
-import { ShowFieldValue } from '../../../ui/ShowFieldValue'
+import { FormField } from '../../../ui/FormField'
 import { ConfigEmptyState } from '../../../ui/ConfigEmptyState'
 import { FormModal } from '../../../ui/FormModal'
 import { useBlockRegistry } from '../../../core/registries'
-import type { ShowFieldConfig } from './types'
+import type { EditFieldConfig } from './types'
 import type { BlockConfig } from '../../../types'
-import { getShowContentConfig } from './config'
+import { getEditContentConfig } from './config'
 
-export interface ShowContentConfig {
+export interface EditContentConfig {
 	columns?: string
-	fields?: ShowFieldConfig[]
+	fields?: EditFieldConfig[]
 	showCard?: boolean
 	cardTitle?: string
 	cardDescription?: string
@@ -24,18 +24,24 @@ export interface ShowContentConfig {
 	allowedBlockTypes?: string[]
 }
 
-export interface ShowContentProps extends BlockComponentProps {
+export interface EditContentProps extends BlockComponentProps {
 	record?: Record<string, unknown> | null
+	values?: Record<string, unknown>
+	onChange?: (name: string, value: unknown) => void
+	errors?: Record<string, string>
 }
 
-export function ShowContent({
+export function EditContent({
 	blockConfig,
 	editMode,
 	record,
+	values = {},
+	onChange,
+	errors = {},
 	onConfigUpdate,
 	onDelete
-}: ShowContentProps) {
-	const config = blockConfig.config as ShowContentConfig
+}: EditContentProps) {
+	const config = blockConfig.config as EditContentConfig
 	const columns = Number(config.columns || 2)
 	const fields = config.fields || []
 	const blocks = config.blocks || []
@@ -48,7 +54,7 @@ export function ShowContent({
 	const { blocks: registryBlocks, getBlock } = useBlockRegistry()
 
 	// Generate dynamic config based on available record data
-	const dynamicShowContentConfig = useMemo(() => getShowContentConfig(record), [record])
+	const dynamicEditContentConfig = useMemo(() => getEditContentConfig(record), [record])
 
 	// Get allowed block types (all except tabs to prevent deep nesting issues)
 	const allowedBlockTypes =
@@ -89,8 +95,8 @@ export function ShowContent({
 		]
 	}
 
-	const handleAddBlock = async (values: Record<string, unknown>) => {
-		const blockType = values.blockType as string
+	const handleAddBlock = async (blockValues: Record<string, unknown>) => {
+		const blockType = blockValues.blockType as string
 		const blockDef = getBlock(blockType)
 		if (!blockDef) return
 
@@ -98,8 +104,8 @@ export function ShowContent({
 		const blockSpecificConfig: Record<string, unknown> = {}
 		if (blockDef.config?.fields) {
 			blockDef.config.fields.forEach(field => {
-				if (values[field.name] !== undefined) {
-					blockSpecificConfig[field.name] = values[field.name]
+				if (blockValues[field.name] !== undefined) {
+					blockSpecificConfig[field.name] = blockValues[field.name]
 				}
 			})
 		}
@@ -119,9 +125,9 @@ export function ShowContent({
 	}
 
 	// Define handlers early so they're available in the empty state
-	const handleConfigUpdate = async (values: Record<string, unknown>) => {
+	const handleConfigUpdate = async (configValues: Record<string, unknown>) => {
 		if (onConfigUpdate) {
-			await onConfigUpdate(blockConfig.id, { ...config, ...values })
+			await onConfigUpdate(blockConfig.id, { ...config, ...configValues })
 		}
 		setShowConfigModal(false)
 	}
@@ -139,7 +145,7 @@ export function ShowContent({
 				<EditableWrapper editMode={true} onEditClick={() => setShowConfigModal(true)}>
 					<ConfigEmptyState
 						title='No content configured'
-						description='Add blocks to display content in this section.'
+						description='Add blocks to display form fields in this section.'
 						action={
 							<Button
 								onClick={e => {
@@ -172,7 +178,7 @@ export function ShowContent({
 					onOpenChange={setShowConfigModal}
 					title='Configure Content'
 					description='Configure the content section settings'
-					fieldConfig={dynamicShowContentConfig}
+					fieldConfig={dynamicEditContentConfig}
 					initialValues={config as Record<string, unknown>}
 					onSubmit={handleConfigUpdate}
 					onDelete={onDelete ? handleDelete : undefined}
@@ -221,6 +227,9 @@ export function ShowContent({
 						}
 						onDelete={() => handleDeleteBlock(block.id)}
 						record={record}
+						values={values}
+						onChange={onChange}
+						errors={errors}
 					/>
 				)
 			})}
@@ -236,7 +245,8 @@ export function ShowContent({
 			}}
 		>
 			{fields.map((field, index) => {
-				const value = record ? record[field.field] : undefined
+				const value = values[field.field]
+				const error = errors[field.field]
 				const span = Math.min(columns, Math.max(1, field.colspan || 1))
 
 				return (
@@ -244,7 +254,21 @@ export function ShowContent({
 						key={field.id || `${field.field}-${index}`}
 						style={{ gridColumn: `span ${span}` }}
 					>
-						<ShowFieldValue value={value} field={field} record={record} />
+						<FormField
+							field={{
+								name: field.field,
+								type: field.type as any,
+								label: field.label || field.field,
+								required: field.required,
+								placeholder: field.placeholder,
+								options: field.options,
+								disabled: field.disabled,
+								readOnly: field.readOnly
+							}}
+							value={value}
+							onChange={val => onChange?.(field.field, val)}
+							error={error}
+						/>
 					</div>
 				)
 			})}
@@ -312,7 +336,7 @@ export function ShowContent({
 				onOpenChange={setShowConfigModal}
 				title='Configure Content'
 				description='Configure the content section settings'
-				fieldConfig={dynamicShowContentConfig}
+				fieldConfig={dynamicEditContentConfig}
 				initialValues={config as Record<string, unknown>}
 				onSubmit={handleConfigUpdate}
 				onDelete={onDelete ? handleDelete : undefined}

@@ -93,3 +93,26 @@
 		background-image: radial-gradient(circle, hsl(var(--muted) / 0.4) 1px, transparent 1px);
 	}
 }
+
+/* Selectable system styles */
+@layer components {
+	/* Base selectable element styles - only in edit mode */
+	[data-recms-selectable] {
+		cursor: pointer;
+		border: 1px dashed hsl(var(--primary) / 0.4);
+		border-radius: 0.5rem;
+		padding: 0.75rem;
+		transition: all 0.2s ease-in-out;
+	}
+
+	/* Hover state - applied via data-recms-hover attribute by JS */
+	[data-recms-selectable][data-recms-hover='true'] {
+		border-style: solid;
+		border-color: hsl(var(--primary));
+	}
+
+	/* Ignored elements (modals, tab buttons, etc.) should not have selectable styles */
+	[data-recms-ignore='true'] {
+		cursor: default;
+	}
+}

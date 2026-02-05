@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
 	Select,
@@ -11,6 +10,14 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
+import {
+	Combobox,
+	ComboboxInput,
+	ComboboxContent,
+	ComboboxList,
+	ComboboxItem,
+	ComboboxEmpty
+} from '@/components/ui/combobox'
 import {
 	Dialog,
 	DialogContent,
@@ -21,7 +28,29 @@ import {
 } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Trash2, GripVertical, Pencil } from 'lucide-react'
+import { Slider } from '@/components/ui/slider'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Columns } from 'lucide-react'
 import type { ShowFieldConfig } from './types'
+
+// Common field names that are typically available in records
+const COMMON_FIELDS = [
+	{ value: 'id', label: 'ID' },
+	{ value: 'title', label: 'Title' },
+	{ value: 'slug', label: 'Slug' },
+	{ value: 'description', label: 'Description' },
+	{ value: 'content', label: 'Content' },
+	{ value: 'createdAt', label: 'Created At' },
+	{ value: 'updatedAt', label: 'Updated At' },
+	{ value: 'publishedAt', label: 'Published At' },
+	{ value: 'deletedAt', label: 'Deleted At' },
+	{ value: 'isPublished', label: 'Is Published' },
+	{ value: 'metaTitle', label: 'Meta Title' },
+	{ value: 'metaDescription', label: 'Meta Description' },
+	{ value: 'metaKeywords', label: 'Meta Keywords' },
+	{ value: 'ogTitle', label: 'OG Title' },
+	{ value: 'ogDescription', label: 'OG Description' }
+]
 
 interface FieldEditorProps {
 	value: ShowFieldConfig[]
@@ -156,26 +185,52 @@ export function FieldEditor({ value = [], onChange }: FieldEditorProps) {
 					<div className='space-y-4'>
 						<div className='space-y-2'>
 							<Label htmlFor='field-name'>Field Name*</Label>
-							<Input
-								id='field-name'
+							<Combobox
 								value={editingField?.field || ''}
-								onChange={e =>
-									setEditingField(prev => ({ ...prev!, field: e.target.value }))
+								onValueChange={value =>
+									setEditingField(prev => ({ ...prev!, field: value || '' }))
 								}
-								placeholder='e.g., title, description'
-							/>
+							>
+								<ComboboxInput
+									id='field-name'
+									placeholder='Search or type field name...'
+									showTrigger
+									showClear
+								/>
+								<ComboboxContent>
+									<ComboboxList>
+										<ComboboxEmpty>
+											No matching fields. Type to add custom field.
+										</ComboboxEmpty>
+										{COMMON_FIELDS.map(field => (
+											<ComboboxItem key={field.value} value={field.value}>
+												{field.label}
+											</ComboboxItem>
+										))}
+									</ComboboxList>
+								</ComboboxContent>
+							</Combobox>
 						</div>
 
 						<div className='space-y-2'>
 							<Label htmlFor='field-label'>Display Label</Label>
-							<Input
-								id='field-label'
+							<Combobox
 								value={editingField?.label || ''}
-								onChange={e =>
-									setEditingField(prev => ({ ...prev!, label: e.target.value }))
+								onValueChange={value =>
+									setEditingField(prev => ({ ...prev!, label: value || '' }))
 								}
-								placeholder='Leave empty to use field name'
-							/>
+							>
+								<ComboboxInput
+									id='field-label'
+									placeholder='Leave empty to use field name'
+									showClear
+								/>
+								<ComboboxContent>
+									<ComboboxList>
+										<ComboboxEmpty>Type to add custom label.</ComboboxEmpty>
+									</ComboboxList>
+								</ComboboxContent>
+							</Combobox>
 						</div>
 
 						<div className='space-y-2'>
@@ -206,25 +261,44 @@ export function FieldEditor({ value = [], onChange }: FieldEditorProps) {
 
 						<div className='space-y-2'>
 							<Label htmlFor='field-colspan'>Column Span</Label>
-							<Select
-								value={String(editingField?.colspan || 1)}
-								onValueChange={value =>
-									setEditingField(prev => ({
-										...prev!,
-										colspan: Number(value)
-									}))
-								}
-							>
-								<SelectTrigger id='field-colspan'>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value='1'>1 column</SelectItem>
-									<SelectItem value='2'>2 columns</SelectItem>
-									<SelectItem value='3'>3 columns</SelectItem>
-									<SelectItem value='4'>4 columns</SelectItem>
-								</SelectContent>
-							</Select>
+							<div className='flex items-center gap-4'>
+								<Slider
+									id='field-colspan'
+									min={1}
+									max={12}
+									step={1}
+									value={[editingField?.colspan || 1]}
+									onValueChange={values =>
+										setEditingField(prev => ({
+											...prev!,
+											colspan: values[0]
+										}))
+									}
+									className='flex-1'
+								/>
+								<InputGroup className='w-20'>
+									<InputGroupAddon align='inline-start'>
+										<Columns className='size-3.5' />
+									</InputGroupAddon>
+									<InputGroupInput
+										type='number'
+										min={1}
+										max={12}
+										value={editingField?.colspan || 1}
+										onChange={e => {
+											const val = Math.min(
+												12,
+												Math.max(1, parseInt(e.target.value, 10) || 1)
+											)
+											setEditingField(prev => ({
+												...prev!,
+												colspan: val
+											}))
+										}}
+										className='text-center'
+									/>
+								</InputGroup>
+							</div>
 						</div>
 					</div>
 

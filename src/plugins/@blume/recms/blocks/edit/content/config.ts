@@ -20,16 +20,18 @@ function extractFieldsFromRecord(
 
 	const inferType = (value: unknown): string => {
 		if (value === null || value === undefined) return 'text'
-		if (typeof value === 'boolean') return 'boolean'
+		if (typeof value === 'boolean') return 'switch'
 		if (typeof value === 'number') return 'number'
 		if (typeof value === 'string') {
 			// Check if it's a date string
-			if (/^\d{4}-\d{2}-\d{2}/.test(value)) return 'date'
+			if (/^\d{4}-\d{2}-\d{2}/.test(value)) return 'text'
+			// Long text should use textarea
+			if (value.length > 100) return 'textarea'
 			return 'text'
 		}
 		if (typeof value === 'object') {
-			if (Array.isArray(value)) return 'json'
-			return 'json'
+			if (Array.isArray(value)) return 'text'
+			return 'text'
 		}
 		return 'text'
 	}
@@ -69,7 +71,7 @@ function extractFieldsFromRecord(
 /**
  * Static config for block registration (without dynamic field options)
  */
-export const showContentConfig: BlockFieldConfig = {
+export const editContentConfig: BlockFieldConfig = {
 	fields: [
 		{
 			name: 'layout',
@@ -129,7 +131,7 @@ export const showContentConfig: BlockFieldConfig = {
 /**
  * Generate dynamic config based on available record data
  */
-export function getShowContentConfig(
+export function getEditContentConfig(
 	record: Record<string, unknown> | null | undefined
 ): BlockFieldConfig {
 	const availableFields = extractFieldsFromRecord(record)
@@ -139,12 +141,13 @@ export function getShowContentConfig(
 	const availableTypes = Array.from(new Set(availableFields.map(f => f.type)))
 	const typeOptions = [
 		{ label: 'Text', value: 'text' },
+		{ label: 'Textarea', value: 'textarea' },
 		{ label: 'Number', value: 'number' },
-		{ label: 'Date', value: 'date' },
-		{ label: 'Rich Text', value: 'richtext' },
-		{ label: 'Boolean', value: 'boolean' },
-		{ label: 'Badge', value: 'badge' },
-		{ label: 'JSON', value: 'json' }
+		{ label: 'Dropdown', value: 'dropdown' },
+		{ label: 'Combobox', value: 'combobox' },
+		{ label: 'Checkbox', value: 'checkbox' },
+		{ label: 'Switch', value: 'switch' },
+		{ label: 'Slider', value: 'slider' }
 	].filter(opt => availableTypes.includes(opt.value) || opt.value === 'text')
 
 	return {
@@ -217,14 +220,21 @@ export function getShowContentConfig(
 									label: 'Type',
 									options: typeOptions,
 									default: 'text',
-									span: 6
+									span: 4
 								},
 								{
-									name: 'format',
+									name: 'required',
+									type: 'switch',
+									label: 'Required',
+									default: false,
+									span: 4
+								},
+								{
+									name: 'placeholder',
 									type: 'text',
-									label: 'Format',
-									placeholder: 'e.g., YYYY-MM-DD for dates',
-									span: 6
+									label: 'Placeholder',
+									placeholder: 'Optional placeholder text',
+									span: 4
 								}
 							]
 						},
@@ -237,12 +247,11 @@ export function getShowContentConfig(
 								{
 									name: 'colspan',
 									type: 'slider',
-									label: 'Column Span (Mobile)',
+									label: 'Column Span',
 									default: 1,
 									min: 1,
 									max: 12,
 									step: 1,
-									comment: 'Mobile devices (< 768px)',
 									span: 12
 								}
 							]
