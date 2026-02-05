@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAppResourcesListsCollection, getAppResourcesShowPagesCollection } from '@/lib/mongo'
+import {
+	getAppResourcesListsCollection,
+	getAppResourcesShowPagesCollection,
+	getAppResourcesEditPagesCollection
+} from '@/lib/mongo'
 
 const blockConfigSchema = z.object({
 	id: z.string(),
@@ -26,12 +30,19 @@ export async function GET(
 		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
 		const resourceId = resourceIdArray.join('/')
 
-		// Check if this is a show page (resourceId ends with /show)
+		// Check page type (resourceId ends with /show or /edit)
 		const isShowPage = resourceId.endsWith('/show')
-		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
+		const isEditPage = resourceId.endsWith('/edit')
+		const actualResourceId = isShowPage
+			? resourceId.replace('/show', '')
+			: isEditPage
+			? resourceId.replace('/edit', '')
+			: resourceId
 
 		const collection = isShowPage
 			? await getAppResourcesShowPagesCollection()
+			: isEditPage
+			? await getAppResourcesEditPagesCollection()
 			: await getAppResourcesListsCollection()
 
 		const config = await collection.findOne({ resourceId: actualResourceId })
@@ -47,12 +58,11 @@ export async function GET(
 							id: 'header-1',
 							slug: 'show-header',
 							config: {
-								title: '',
-								description: '',
 								showEdit: true,
 								showDelete: false,
 								showBack: true
 							},
+							visible: true,
 							order: 0
 						},
 						{
@@ -63,7 +73,20 @@ export async function GET(
 									{
 										id: 'general',
 										label: 'General',
-										blocks: []
+										blocks: [
+											{
+												id: 'field-id',
+												slug: 'number',
+												config: {
+													name: 'id',
+													label: 'ID',
+													disabled: false,
+													required: false
+												},
+												visible: true,
+												order: 0
+											}
+										]
 									}
 								],
 								defaultTab: 'general',
@@ -71,6 +94,35 @@ export async function GET(
 								variant: 'default',
 								registryType: 'field'
 							},
+							visible: true,
+							order: 1
+						}
+					]
+				})
+			} else if (isEditPage) {
+				return NextResponse.json({
+					id: null,
+					resourceId: actualResourceId,
+					blocks: [
+						{
+							id: 'header-1',
+							slug: 'edit-header',
+							config: {
+								showBack: true
+							},
+							visible: true,
+							order: 0
+						},
+						{
+							id: 'content-1',
+							slug: 'edit-content',
+							config: {
+								columns: '2',
+								showCard: true,
+								cardTitle: 'Edit Details',
+								fields: []
+							},
+							visible: true,
 							order: 1
 						}
 					]
@@ -84,25 +136,39 @@ export async function GET(
 							id: 'header-1',
 							slug: 'list-header',
 							config: {
-								title: '',
-								description: '',
-								showEditButton: true
-							}
+								showEditButton: true,
+								showBack: false
+							},
+							visible: true,
+							order: 0
 						},
 						{
 							id: 'filters-1',
 							slug: 'list-filters',
 							config: {
 								filters: []
-							}
+							},
+							visible: true,
+							order: 1
 						},
 						{
 							id: 'table-1',
 							slug: 'list-table',
 							config: {
-								columns: [],
-								rowClickAction: 'none'
-							}
+								columns: [
+									{
+										id: 'col-id',
+										field: 'id',
+										label: 'ID',
+										type: 'number',
+										enabledByDefault: true,
+										sortable: true
+									}
+								],
+								rowClickAction: 'show'
+							},
+							visible: true,
+							order: 2
 						},
 						{
 							id: 'pagination-1',
@@ -110,7 +176,9 @@ export async function GET(
 							config: {
 								pageSize: 10,
 								pageSizeOptions: [10, 25, 50, 100]
-							}
+							},
+							visible: true,
+							order: 3
 						}
 					]
 				})
@@ -196,9 +264,14 @@ export async function PATCH(
 		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
 		const resourceId = resourceIdArray.join('/')
 
-		// Check if this is a show page (resourceId ends with /show)
+		// Check page type (resourceId ends with /show or /edit)
 		const isShowPage = resourceId.endsWith('/show')
-		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
+		const isEditPage = resourceId.endsWith('/edit')
+		const actualResourceId = isShowPage
+			? resourceId.replace('/show', '')
+			: isEditPage
+			? resourceId.replace('/edit', '')
+			: resourceId
 
 		// Validate input
 		const validation = pageConfigSchema.safeParse(body)
@@ -209,6 +282,8 @@ export async function PATCH(
 		const configData = validation.data
 		const collection = isShowPage
 			? await getAppResourcesShowPagesCollection()
+			: isEditPage
+			? await getAppResourcesEditPagesCollection()
 			: await getAppResourcesListsCollection()
 
 		// Check if config exists
@@ -269,12 +344,19 @@ export async function DELETE(
 		// Join array segments: ['blog-categories', 'show'] -> 'blog-categories/show'
 		const resourceId = resourceIdArray.join('/')
 
-		// Check if this is a show page (resourceId ends with /show)
+		// Check page type (resourceId ends with /show or /edit)
 		const isShowPage = resourceId.endsWith('/show')
-		const actualResourceId = isShowPage ? resourceId.replace('/show', '') : resourceId
+		const isEditPage = resourceId.endsWith('/edit')
+		const actualResourceId = isShowPage
+			? resourceId.replace('/show', '')
+			: isEditPage
+			? resourceId.replace('/edit', '')
+			: resourceId
 
 		const collection = isShowPage
 			? await getAppResourcesShowPagesCollection()
+			: isEditPage
+			? await getAppResourcesEditPagesCollection()
 			: await getAppResourcesListsCollection()
 
 		const result = await collection.deleteOne({ resourceId: actualResourceId })

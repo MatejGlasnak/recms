@@ -5,7 +5,8 @@ import { ThemeProvider } from 'next-themes'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { RefineProvider } from './refine-provider'
-import { RecmsProvider } from '@blume/recms'
+import { RecmsApp } from '@blume/recms'
+import recmsConfig from '@/recms.config'
 
 export function Providers({ children }: { children: React.ReactNode }) {
 	const [queryClient] = useState(
@@ -25,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 			<SessionProvider>
 				<QueryClientProvider client={queryClient}>
 					<RefineProvider>
-						<RecmsProvider>{children}</RecmsProvider>
+						<RecmsApp config={recmsConfig}>{children}</RecmsApp>
 					</RefineProvider>
 				</QueryClientProvider>
 			</SessionProvider>

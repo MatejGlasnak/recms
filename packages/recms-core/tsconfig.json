@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"composite": false,
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@blume/recms-core": ["./src/index.ts"],
+			"@blume/recms-core/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+}

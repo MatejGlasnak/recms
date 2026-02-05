@@ -7,7 +7,7 @@ const config: Config = {
 		'./src/app/**/*.{ts,tsx}',
 		'./src/components/**/*.{ts,tsx}',
 		'./src/lib/**/*.{ts,tsx}',
-		'./src/plugins/**/*.{ts,tsx}'
+		'./packages/**/*.{ts,tsx}'
 	],
 	safelist: [
 		// Grid column classes

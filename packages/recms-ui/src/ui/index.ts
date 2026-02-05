@@ -1,0 +1,10 @@
+// Compatibility re-exports for old ui/ structure
+export { BlockRenderer } from '../renderers/BlockRenderer'
+export { FormField } from '../renderers/FormField'
+export { EditableWrapper } from '../components/EditableWrapper'
+export { ConfigEmptyState } from '../components/ConfigEmptyState'
+export { PageLoading } from '../components/PageLoading'
+export { PageError } from '../components/PageError'
+export { InlineError } from '../components/InlineError'
+export { FormModal } from '../components/FormModal'
+export { ShowFieldValue } from '../components/ShowFieldValue'

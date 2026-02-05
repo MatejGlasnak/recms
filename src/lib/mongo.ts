@@ -81,3 +81,9 @@ export async function getAppResourcesShowPagesCollection(): Promise<Collection> 
 	const db = await getDatabase()
 	return db.collection('app_resources_show_pages')
 }
+
+// Helper to get app resources edit pages collection (for storing block-based edit page configurations)
+export async function getAppResourcesEditPagesCollection(): Promise<Collection> {
+	const db = await getDatabase()
+	return db.collection('app_resources_edit_pages')
+}

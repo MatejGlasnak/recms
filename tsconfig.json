@@ -20,7 +20,11 @@
 		],
 		"paths": {
 			"@/*": ["./src/*"],
-			"@blume/recms": ["./src/plugins/@blume/recms"]
+			"@blume/recms": ["./packages/recms/src/index.ts"],
+			"@blume/recms-core": ["./packages/recms-core/src/index.ts"],
+			"@blume/recms-core/*": ["./packages/recms-core/src/*"],
+			"@blume/recms-ui": ["./packages/recms-ui/src/index.ts"],
+			"@blume/recms-ui/*": ["./packages/recms-ui/src/*"]
 		}
 	},
 	"include": [

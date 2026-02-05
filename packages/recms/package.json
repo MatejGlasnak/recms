@@ -1,0 +1,60 @@
+{
+	"name": "@blume/recms",
+	"version": "0.1.0",
+	"description": "Modern, extensible CMS built on Refine - main package",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"sideEffects": false,
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE-MIT.md"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"type-check": "tsc --noEmit",
+		"lint": "eslint src --ext .ts,.tsx"
+	},
+	"peerDependencies": {
+		"react": "^18.0.0 || ^19.0.0",
+		"react-dom": "^18.0.0 || ^19.0.0",
+		"@refinedev/core": "^5.0.0"
+	},
+	"dependencies": {
+		"@blume/recms-core": "workspace:*",
+		"@blume/recms-ui": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"tsup": "^8.0.0",
+		"typescript": "^5"
+	},
+	"keywords": [
+		"cms",
+		"admin",
+		"refine",
+		"headless",
+		"typescript",
+		"react",
+		"nextjs"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/blume/recms"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}
